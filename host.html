@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- ===== PWA / iOS ホーム画面アプリ設定（ホスト用） ===== -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Host Log">
+    <meta name="theme-color" content="#0b0f19">
+    <link rel="manifest" href="manifest-host.webmanifest">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-host.png">
+
+    <title>Concierge Host Log</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Noto+Serif+JP:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(22, 27, 34, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f0f6fc;
+            --text-sub: #8b949e;
+            --accent-blue: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.15);
+            --danger: #f87171;
+            --success: #34d399;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', 'Noto Serif JP', sans-serif; -webkit-tap-highlight-color: transparent; }
+        html { background: var(--bg-color); -webkit-text-size-adjust: 100%; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100dvh;
+            display: flex; flex-direction: column; align-items: center;
+            padding: calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(148, 163, 184, 0.03) 0%, transparent 40%);
+        }
+        .container { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 16px; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 12px 4px; }
+        .logo { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-sub); font-weight: 600; }
+        .live { font-size: 0.65rem; letter-spacing: 0.15em; color: var(--text-sub); display: flex; align-items: center; gap: 6px; }
+        .live .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-sub); }
+        .live.on .dot { background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 2s infinite; }
+        .live.err .dot { background: var(--danger); }
+        @keyframes pulse { 50% { opacity: 0.4; } }
+
+        .card {
+            background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px;
+            padding: 20px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); position: relative; overflow: hidden;
+        }
+        .card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, transparent, var(--accent-blue), transparent); opacity: 0.5; }
+        .label { font-size: 0.7rem; letter-spacing: 0.15em; color: var(--accent-blue); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; }
+        .note { font-size: 0.75rem; color: var(--text-sub); line-height: 1.6; }
+
+        /* Login */
+        input {
+            width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); border-radius: 12px;
+            padding: 12px; color: var(--text-main); font-size: 16px; outline: none; margin-bottom: 10px; -webkit-appearance: none;
+        }
+        input:focus { border-color: var(--accent-blue); }
+        .btn {
+            width: 100%; background: var(--text-main); color: var(--bg-color); border: none; border-radius: 12px;
+            padding: 14px; font-weight: 600; font-size: 0.9rem; cursor: pointer; -webkit-appearance: none;
+        }
+        .btn:disabled { opacity: 0.4; }
+        .btn.ghost { background: none; color: var(--text-sub); border: 1px solid var(--card-border); font-weight: 500; font-size: 0.8rem; padding: 10px; }
+        .btn.danger { background: none; color: var(--danger); border: 1px solid rgba(248,113,113,0.4); font-weight: 500; font-size: 0.8rem; padding: 10px; }
+        .err-msg { color: var(--danger); font-size: 0.75rem; margin-top: 10px; min-height: 1em; }
+
+        /* Progress */
+        .progress { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .p-step { text-align: center; padding: 10px 4px; border: 1px solid var(--card-border); border-radius: 12px; font-size: 0.65rem; letter-spacing: 0.1em; color: var(--text-sub); transition: all 0.4s; }
+        .p-step b { display: block; font-size: 1rem; letter-spacing: 0; margin-bottom: 2px; color: var(--text-sub); }
+        .p-step.done { border-color: var(--accent-blue); background: var(--accent-glow); color: var(--text-main); }
+        .p-step.done b { color: var(--accent-blue); }
+
+        /* Log */
+        .log-item {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px;
+            padding: 14px; font-size: 0.85rem; line-height: 1.55; animation: fadeIn 0.6s ease;
+        }
+        .log-item + .log-item { margin-top: 10px; }
+        .log-item.fresh { border-color: var(--accent-blue); box-shadow: 0 0 15px var(--accent-glow); }
+        .log-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+        .log-step { font-size: 0.7rem; letter-spacing: 0.15em; color: var(--accent-blue); font-weight: 600; text-transform: uppercase; }
+        .log-time { color: var(--text-sub); font-size: 0.7rem; }
+        .log-q { color: var(--text-sub); font-size: 0.75rem; margin-bottom: 6px; }
+        .log-choice { font-weight: 500; }
+        .log-memo { margin-top: 8px; padding: 8px 10px; border-left: 2px solid var(--accent-blue); background: rgba(0,0,0,0.15); border-radius: 0 8px 8px 0; white-space: pre-wrap; word-break: break-word; }
+        .log-meta { margin-top: 8px; font-size: 0.65rem; color: var(--text-sub); }
+        .empty { color: var(--text-sub); font-size: 0.8rem; text-align: center; padding: 20px 0; }
+
+        .row { display: flex; gap: 10px; }
+        .demo-badge { font-size: 0.7rem; color: var(--danger); border: 1px solid rgba(248,113,113,0.4); border-radius: 12px; padding: 10px 12px; line-height: 1.6; }
+
+        /* Toast */
+        .toast {
+            position: fixed; left: 50%; top: calc(14px + env(safe-area-inset-top)); transform: translate(-50%, -30px);
+            width: min(92vw, 420px); background: rgba(22,27,34,0.95); border: 1px solid var(--accent-blue); border-radius: 16px;
+            padding: 12px 16px; font-size: 0.8rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            opacity: 0; pointer-events: none; transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1); z-index: 300;
+        }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+        .toast .label { margin-bottom: 4px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">Concierge // Host</div>
+            <div class="live" id="live"><span class="dot"></span><span id="liveText">OFFLINE</span></div>
+        </header>
+
+        <div class="demo-badge" id="demoBadge" hidden>
+            DEMO MODE — config.js が未設定のため、この端末の中だけで動いています。彼女の iPhone の回答を受け取るには README の手順で Firebase を設定してください。
+        </div>
+
+        <!-- Login -->
+        <div class="card" id="loginCard" hidden>
+            <div class="label" id="loginLabel">Host Sign-in</div>
+            <form id="loginForm">
+                <input type="email" id="email" placeholder="ホスト用メールアドレス" autocomplete="username" required>
+                <input type="password" id="password" placeholder="パスワード（6文字以上）" autocomplete="current-password" minlength="6" required>
+                <button class="btn" type="submit" id="loginBtn">ログイン</button>
+            </form>
+            <div class="err-msg" id="loginErr"></div>
+            <button class="btn ghost" id="modeBtn" type="button" style="margin-top:6px;">はじめての方：ホスト登録</button>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dash" hidden>
+            <div class="card">
+                <div class="label">Progress</div>
+                <div class="progress" id="progress"></div>
+                <p class="note" id="lastSeen" style="margin-top:12px;">まだ回答はありません。</p>
+            </div>
+
+            <div class="card" style="margin-top:16px;">
+                <div class="label">Answer Log (<span id="count">0</span>)</div>
+                <div id="log"><p class="empty">まだ回答はありません。</p></div>
+            </div>
+
+            <div class="card" style="margin-top:16px;">
+                <div class="label">Tools</div>
+                <div class="row">
+                    <button class="btn ghost" id="soundBtn">🔔 通知音 OFF</button>
+                    <button class="btn ghost" id="logoutBtn">ログアウト</button>
+                </div>
+                <button class="btn danger" id="clearBtn" style="margin-top:10px;">テスト回答をすべて削除</button>
+                <p class="note" style="margin-top:10px;">彼女のiPhone側の進行をやり直すには、彼女のアプリのURL末尾に <b>?reset=1</b> を付けて一度開きます（ホーム画面に追加する前のテスト用）。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"><div class="label" id="toastLabel">New Answer</div><div id="toastText"></div></div>
+
+    <script type="module">
+        import { isDemo, onHostAuth, hostSignIn, hostSignUp, hostSignOut, watchAnswers, deleteAllAnswers } from './sync.js';
+
+        const $ = (id) => document.getElementById(id);
+        const TOTAL_STEPS = 4;
+        const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const fmt = (iso) => iso ? new Date(iso).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—';
+
+        let unsubscribe = null;
+        let known = null;           // 既に表示した回答ID（初回読み込みでは通知しない）
+        let soundOn = localStorage.getItem('ajc-host-sound') === '1';
+        let audioCtx = null;
+
+        if (isDemo) $('demoBadge').hidden = false;
+
+        function setLive(mode, text) {
+            $('live').className = 'live ' + mode;
+            $('liveText').textContent = text;
+        }
+
+        // ---------- Auth ----------
+        onHostAuth((user) => {
+            if (user) {
+                $('loginCard').hidden = true;
+                $('dash').hidden = false;
+                $('logoutBtn').hidden = isDemo;
+                start();
+            } else {
+                stop();
+                $('dash').hidden = true;
+                $('loginCard').hidden = false;
+                setLive('', 'SIGNED OUT');
+            }
+        }).catch((e) => {
+            setLive('err', 'ERROR');
+            $('loginCard').hidden = false;
+            $('loginErr').textContent = 'Firebase を読み込めませんでした（通信状況を確認してください）';
+        });
+
+        let signUpMode = false;
+        $('modeBtn').addEventListener('click', () => {
+            signUpMode = !signUpMode;
+            $('loginLabel').textContent = signUpMode ? 'Host Registration' : 'Host Sign-in';
+            $('loginBtn').textContent = signUpMode ? 'この内容で登録する' : 'ログイン';
+            $('modeBtn').textContent = signUpMode ? 'ログインに戻る' : 'はじめての方：ホスト登録';
+            $('password').autocomplete = signUpMode ? 'new-password' : 'current-password';
+            $('loginErr').textContent = '';
+        });
+
+        $('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            $('loginBtn').disabled = true;
+            $('loginErr').textContent = '';
+            try {
+                if (signUpMode) await hostSignUp($('email').value.trim(), $('password').value);
+                else await hostSignIn($('email').value.trim(), $('password').value);
+            } catch (err) {
+                $('loginErr').textContent = (signUpMode ? '登録できませんでした：' : 'ログインできませんでした：') + (err.code || err.message);
+            } finally {
+                $('loginBtn').disabled = false;
+            }
+        });
+        $('logoutBtn').addEventListener('click', () => hostSignOut());
+
+        // ---------- Live data ----------
+        async function start() {
+            if (unsubscribe) return;
+            setLive('', 'CONNECTING');
+            known = null;
+            unsubscribe = await watchAnswers((answers, err) => {
+                if (err) {
+                    setLive('err', 'NO ACCESS');
+                    $('log').innerHTML = `<p class="empty">読み取り権限がありません（${esc(err.code)}）。<br>firestore.rules の HOST_UID を確認してください。</p>`;
+                    return;
+                }
+                setLive('on', 'LIVE');
+                render(answers);
+            });
+        }
+        function stop() {
+            if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+        }
+
+        function render(answers) {
+            const ids = new Set(answers.map((a) => a._id));
+            const fresh = known ? answers.filter((a) => !known.has(a._id)) : [];
+            known = ids;
+
+            $('count').textContent = answers.length;
+            document.title = answers.length ? `(${answers.length}) Concierge Host Log` : 'Concierge Host Log';
+
+            // Progress
+            const doneSteps = new Set(answers.map((a) => a.step));
+            const names = ['Departure', 'Transit', 'Arrival', 'Night'];
+            $('progress').innerHTML = Array.from({ length: TOTAL_STEPS }, (_, i) =>
+                `<div class="p-step ${doneSteps.has(i + 1) ? 'done' : ''}"><b>0${i + 1}</b>${names[i]}</div>`).join('');
+            $('lastSeen').textContent = answers.length
+                ? `最終回答：${fmt(answers[0].clientTime)}（${answers[0].stepLabel || 'Step ' + answers[0].step}）`
+                : 'まだ回答はありません。';
+
+            // Log
+            if (!answers.length) {
+                $('log').innerHTML = '<p class="empty">まだ回答はありません。</p>';
+            } else {
+                const freshIds = new Set(fresh.map((a) => a._id));
+                $('log').innerHTML = answers.map((a) => `
+                    <div class="log-item ${freshIds.has(a._id) ? 'fresh' : ''}">
+                        <div class="log-head">
+                            <span class="log-step">${esc(a.stepLabel || 'Step 0' + a.step)}</span>
+                            <span class="log-time">${fmt(a.clientTime)}</span>
+                        </div>
+                        ${a.question ? `<div class="log-q">${esc(a.question)}</div>` : ''}
+                        <div class="log-choice">→ ${esc(a.choice)}</div>
+                        ${a.memo ? `<div class="log-memo">${esc(a.memo)}</div>` : ''}
+                        <div class="log-meta">回答 ${fmt(a.clientTime)} ／ 受信 ${fmt(a.receivedAt)} ／ ${a.device === 'home-screen-app' ? 'ホーム画面アプリ' : 'ブラウザ'}</div>
+                    </div>`).join('');
+            }
+
+            if (fresh.length) notify(fresh[0]);
+        }
+
+        // ---------- Notify ----------
+        let toastTimer;
+        function notify(a) {
+            $('toastLabel').textContent = `New Answer // ${a.stepLabel || 'Step 0' + a.step}`;
+            $('toastText').textContent = a.choice + (a.memo ? `「${a.memo}」` : '');
+            $('toast').classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => $('toast').classList.remove('show'), 6000);
+            if (navigator.vibrate) navigator.vibrate([30, 60, 30]);
+            if (soundOn) chime();
+        }
+        function chime() {
+            try {
+                audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+                const t = audioCtx.currentTime;
+                [880, 1320].forEach((f, i) => {
+                    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                    o.type = 'sine'; o.frequency.value = f;
+                    g.gain.setValueAtTime(0.0001, t + i * 0.12);
+                    g.gain.exponentialRampToValueAtTime(0.2, t + i * 0.12 + 0.02);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.12 + 0.5);
+                    o.connect(g).connect(audioCtx.destination);
+                    o.start(t + i * 0.12); o.stop(t + i * 0.12 + 0.55);
+                });
+            } catch (_) {}
+        }
+        const paintSound = () => $('soundBtn').textContent = soundOn ? '🔔 通知音 ON' : '🔕 通知音 OFF';
+        paintSound();
+        $('soundBtn').addEventListener('click', () => {
+            soundOn = !soundOn;
+            localStorage.setItem('ajc-host-sound', soundOn ? '1' : '0');
+            paintSound();
+            if (soundOn) chime(); // iOS はタップ操作の中で一度鳴らすと以後も鳴らせる
+        });
+
+        $('clearBtn').addEventListener('click', async () => {
+            if (!confirm('受信した回答をすべて削除します。元に戻せません。よろしいですか？')) return;
+            try { await deleteAllAnswers(); } catch (e) { alert('削除できませんでした：' + (e.code || e.message)); }
+        });
+
+        if ('serviceWorker' in navigator) {
+            addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+        }
+    </script>
+</body>
+</html>
