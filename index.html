@@ -522,6 +522,48 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* プレビューモード（?now= 付きで開いたとき） */
+        .preview-bar {
+            position: fixed;
+            left: 50%;
+            bottom: calc(12px + env(safe-area-inset-bottom));
+            transform: translateX(-50%);
+            width: min(94vw, 440px);
+            background: rgba(22, 27, 34, 0.94);
+            border: 1px solid var(--accent-blue);
+            border-radius: 16px;
+            padding: 10px 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            z-index: 150;
+            color: #f0f6fc;
+        }
+        .preview-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 0.65rem;
+            letter-spacing: 0.12em;
+            margin-bottom: 8px;
+        }
+        .preview-head b { color: #38bdf8; font-weight: 600; }
+        .preview-head span { color: #8b949e; }
+        .preview-chips { display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .preview-chips a {
+            flex-shrink: 0;
+            font-size: 0.7rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px;
+            padding: 5px 10px;
+            white-space: nowrap;
+        }
+        .preview-chips a.active { background: #38bdf8; border-color: #38bdf8; color: #0b0f19; font-weight: 600; }
+        .preview-chips a.reset { color: #f87171; border-color: rgba(248,113,113,0.4); }
+        body.previewing { padding-bottom: calc(130px + env(safe-area-inset-bottom)); }
+
         /* 電波待ち表示（未送信がある時だけ出る） */
         .sync-pill {
             position: fixed;
@@ -687,15 +729,19 @@
         const isOpen = (step) => { const t = openAt(step); return !t || now() >= t; };
 
         const TOTAL_STEPS = 8;
-        const STATE_KEY = 'ajc-state';
+        // ?now= 付きで開くと「プレビューモード」：回答は送信せず、本番とは別の場所に保存する
+        const isPreview = !!nowOverride;
+        const STATE_KEY = isPreview ? 'ajc-state-preview' : 'ajc-state';
         const THEME_COLORS = { dark: '#0b0f19', light: '#f8fafc', silver: '#1e293b' };
 
         // ?reset=1 で端末内の進行状況をリセット（彼女に渡す前のテスト用）
         if (new URLSearchParams(location.search).has('reset')) {
             localStorage.removeItem(STATE_KEY);
-            localStorage.removeItem('ajc-outbox');
-            localStorage.removeItem('ajc-sent');
-            localStorage.removeItem('ajc-resent-at');
+            if (!isPreview) {
+                localStorage.removeItem('ajc-outbox');
+                localStorage.removeItem('ajc-sent');
+                localStorage.removeItem('ajc-resent-at');
+            }
             const p = new URLSearchParams(location.search);
             p.delete('reset');
             history.replaceState(null, '', location.pathname + (p.toString() ? '?' + p : ''));
@@ -884,7 +930,7 @@
             save();
             markDone(step, true);
             if (navigator.vibrate) navigator.vibrate(15);
-            sendAnswer(answer);
+            if (!isPreview) sendAnswer(answer);
         };
 
         function restore() {
@@ -908,8 +954,34 @@
         applySeals();
         restore();
         applySeals();
-        updatePill(pendingCount());
-        startAutoFlush();
+        if (isPreview) showPreviewBar();
+        else {
+            updatePill(pendingCount());
+            startAutoFlush();
+        }
+
+        function showPreviewBar() {
+            const stops = [
+                ['前日', '2026-11-20T21:00'],
+                ['1日目 9:00', '2026-11-21T09:05'],
+                ['14:30', '2026-11-21T14:35'],
+                ['19:00', '2026-11-21T19:05'],
+                ['2日目 6:00', '2026-11-22T06:05'],
+                ['9:30', '2026-11-22T09:35'],
+            ];
+            const t = now();
+            const j = new Date(t.getTime() + 9 * 3600 * 1000);
+            const label = `${j.getUTCMonth() + 1}/${j.getUTCDate()} ${j.getUTCHours()}:${String(j.getUTCMinutes()).padStart(2, '0')}`;
+            const bar = document.createElement('div');
+            bar.className = 'preview-bar';
+            bar.innerHTML = `<div class="preview-head"><b>PREVIEW MODE</b><span>${label} として表示中・送信されません</span></div>
+                <div class="preview-chips">${stops.map(([n, v]) =>
+                    `<a href="?now=${v}" class="${nowOverride === v ? 'active' : ''}">${n}</a>`).join('')}
+                    <a href="?now=${encodeURIComponent(nowOverride)}&reset=1" class="reset">最初から</a></div>`;
+            document.body.appendChild(bar);
+            document.body.classList.add('previewing');
+            $('installHint').classList.remove('show');
+        }
 
         if ('serviceWorker' in navigator) {
             addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
