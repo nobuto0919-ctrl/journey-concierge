@@ -546,21 +546,7 @@
         <!-- Step 1 -->
         <div class="step-card" id="step1">
             <div class="step-number">Step 01 // Departure</div>
-            <div class="step-question">今回の記念日旅行、どんな気分で過ごしたい？</div>
-            <div class="options-group">
-                <div class="option-btn" onclick="selectOption(1, this)">
-                    <div class="option-radio"></div>
-                    <span>日常を忘れて、極上の温泉と美味しいグルメに癒やされたい</span>
-                </div>
-                <div class="option-btn" onclick="selectOption(1, this)">
-                    <div class="option-radio"></div>
-                    <span>非日常の圧倒的なエンタメ空間で、お祭り気分でワクワクしたい</span>
-                </div>
-            </div>
-            <div class="text-input-wrapper">
-                <textarea placeholder="自由なリクエストや今の気分をどうぞ（任意）" id="input1"></textarea>
-            </div>
-            <button class="submit-btn" id="btn1" onclick="submitStep(1)" disabled>決定して次へ進む</button>
+            <div data-secret="1" data-enc="XwsHFUkGHgYWEFJMEB0AAkoUFgodFwAKHEVbh9TkhvL7kebLi8f2htbQlPDAhfjri8jpkefkgO7HgOv2kebPhd/5huHjkebCiu7ggOjxkebygO7xgOjhndv6X0AKCh9beEdFQ09OQ0lFUkdFQ1MKCh9FEQsEEBxTQQYVBg4KDRxDBBsKBxdHXWVOQ0lFUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMDBkRGwgLTg0aDUtFHQkGDwYNCFRHAQIJBgwaLBkRGwgLS15CQx0NGxRMQVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZFg4TQwwCAhoWT0UKExsHDAdIAAYBCgBMXVVKFg4TXWVOQ0lFUkdFQ09OQ0lFUkdFQ09OQ1UWAgYLXYn5xozdyoTn8YrR+4rn/oTkxYzu4o/Ax4Pd6YzvzY/d24HW6ozvy47b/IL00Izv9Irk9oTn04ztyIrm04TkyIj38Yrn9oTk9ozs74rk7YTk51NBEBkEHFlvQ09OQ0lFUkdFQ09OQ0lFUltKBwYYXWNFUkdFQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHHRcRCgAATgsRHEVFDAENDwAGGVpHEAoCBgoRPRcRCgAAS1hJUhMNChxHQVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0BEx0MHQlIEQ4KCgZHTFtKBwYYXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUlsWEw4AXYD47IHyxorW24rk3IL5xIru8Y7/9oTkyYzsy4rmwYTn3Iztwo7MyI7z8IzvxIrl84Tk6YjLzorn+IHV9Irm5Yrk1YTmzIzszIrm3YTnzIzv9Irk7YTk51NBEBkEHFlvQ09OQ0lFUkdFQ09OQ0lFUltKBwYYXWNFUkdFQ09OQ0lFUkdZTAsHFVdvUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMFwwdBkoMDR8bF0QSAAYVEwocQVdvUkdFQ09OQ0lFUkdFQ09OQ1URFx8RAh0LAkkVHgYGBgcBDw0AAFpHi+jEhP3UkebPgOzEgOvKkeXNgO3XgOrtkeXhh9TkgOjLlNfyhufogOv3kebMgO7ogOj7ndvth9TVhe3qndvsQU8HB1RHGwkVFhtfQVdZXRMAGxsPEQwETG1FQ09OQ0lFUkdFQ09STA0MBFlvQ09OQ0lFUkdFQ09OXwsQBhMKDU8NDwgWAVpHEBoMDgARXwURDU1OCg1YUAURDV5MQwYLEQsMAARTQRoQEAoMFzwaBhlNQ05HQwsHEAgHHgIBXYnf2YzL6ITk9IzvxY/J04Tk24bu0Yrn8ltKARoaFwYLTA=="></div>
 
             <div id="reveal1" style="display: none;">
                 <!-- 公開日時まではこちらを表示 -->
@@ -701,7 +687,7 @@
             const j = new Date(t.getTime() + 9 * 3600 * 1000); // 日本時間で表示
             return `OPENS ${j.getUTCMonth() + 1}.${j.getUTCDate()} ${WEEK[j.getUTCDay()]}`;
         }
-        for (let s = 2; s <= TOTAL_STEPS; s++) {
+        for (let s = 1; s <= TOTAL_STEPS; s++) {
             if (!openAt(s)) continue;
             const note = document.createElement('div');
             note.className = 'sealed-note';
@@ -729,12 +715,12 @@
             $('destSealed').style.display = destOpen ? 'none' : 'block';
             $('destOpen').style.display = destOpen ? 'block' : 'none';
 
-            for (let s = 2; s <= TOTAL_STEPS; s++) {
+            for (let s = 1; s <= TOTAL_STEPS; s++) {
                 const card = $(`step${s}`);
                 const open = isOpen(s);
                 card.classList.toggle('sealed', !open);
-                // 前のStepに答えていて、公開時刻を過ぎていたら回答できる
-                if (open && state.done[s - 1]) card.classList.remove('locked');
+                // 前のStepに答えていて（Step 1 は前がない）、公開時刻を過ぎていたら回答できる
+                if (open && (s === 1 || state.done[s - 1])) card.classList.remove('locked');
                 else if (!state.done[s]) card.classList.add('locked');
             }
         }
