@@ -188,6 +188,15 @@
             margin-bottom: 2px;
         }
 
+        .briefing-item.wide { grid-column: 1 / -1; }
+
+        .briefing-note {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-sub);
+            line-height: 1.4;
+        }
+
         /* Install hint (Safari で開いたときだけ表示) */
         .install-hint {
             display: none;
@@ -507,20 +516,29 @@
             </div>
             <div class="briefing-content" id="briefingContent">
                 <div class="briefing-item">
+                    <span>集合時間</span>
+                    <strong>9:00</strong>
+                </div>
+                <div class="briefing-item">
+                    <span>集合場所</span>
+                    <strong>上野</strong>
+                </div>
+                <div class="briefing-item">
                     <span>予想気温</span>
-                    <strong>最高 9℃ / 最低 1℃</strong>
+                    <strong>最高 5℃ / 最低 -1℃</strong>
                 </div>
                 <div class="briefing-item">
                     <span>推奨服装</span>
-                    <strong>防風コート・ニット</strong>
+                    <strong>防寒対策・ヒートテック</strong>
                 </div>
-                <div class="briefing-item">
+                <div class="briefing-item wide">
                     <span>推奨シューズ</span>
-                    <strong>歩きやすいスニーカー</strong>
+                    <strong>歩きやすい靴・汚れてもいい靴</strong>
+                    <small class="briefing-note">歩きづらい場面もあるかもしれません</small>
                 </div>
-                <div class="briefing-item">
+                <div class="briefing-item wide">
                     <span>持ち物ヒント</span>
-                    <strong>マフラー・手袋推奨</strong>
+                    <strong>マフラー・手袋・防寒グッズ</strong>
                 </div>
             </div>
         </div>
