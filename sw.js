@@ -2,7 +2,7 @@
 // - 自分のファイル：まずネットから最新を取り、ダメならキャッシュ（電波がなくても開ける）
 // - フォント・Firebase SDK：キャッシュ優先（バージョン固定なので変わらない）
 // ファイルを更新したら VERSION を上げると、古いキャッシュが消えます。
-const VERSION = "ajc-v3";
+const VERSION = "ajc-v4";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -71,7 +71,9 @@ self.addEventListener("fetch", (e) => {
 
   if (new URL(url).origin === self.location.origin) {
     e.respondWith(
-      fetch(req)
+      // ブラウザのキャッシュ（GitHub Pages は10分）を使わず、毎回最新か確認する
+      // （古いファイルと新しいファイルが混ざって動かなくなるのを防ぐ）
+      fetch(url, { cache: "no-cache", credentials: "same-origin" })
         .then((res) => {
           if (res.ok) {
             const copy = res.clone();
