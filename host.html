@@ -126,6 +126,17 @@
             DEMO MODE — config.js が未設定のため、この端末の中だけで動いています。彼女の iPhone の回答を受け取るには README の手順で Firebase を設定してください。
         </div>
 
+        <!-- Host Key（ログイン不要方式） -->
+        <div class="card" id="keyCard" hidden>
+            <div class="label">Host Key</div>
+            <p class="note" style="margin-bottom:12px;">回答を読むための「ホスト用の鍵」が、この端末にまだありません。受け取った <b>host.html#key=…</b> のURLをこの端末で開くか、そのURLか鍵をここに貼り付けてください。</p>
+            <form id="keyForm">
+                <input type="text" id="keyInput" placeholder="URL または 鍵を貼り付け" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+                <button class="btn" type="submit">この鍵を使う</button>
+            </form>
+            <div class="err-msg" id="keyErr"></div>
+        </div>
+
         <!-- Login -->
         <div class="card" id="loginCard" hidden>
             <div class="label" id="loginLabel">Host Sign-in</div>
@@ -157,6 +168,7 @@
                     <button class="btn ghost" id="soundBtn">🔔 通知音 OFF</button>
                     <button class="btn ghost" id="logoutBtn">ログアウト</button>
                 </div>
+                <button class="btn ghost" id="copyKeyBtn" style="margin-top:10px;" hidden>🔑 ホーム画面アプリ用に鍵をコピー</button>
                 <button class="btn danger" id="clearBtn" style="margin-top:10px;">テスト回答をすべて削除</button>
                 <p class="note" style="margin-top:10px;">彼女のiPhone側の進行をやり直すには、彼女のアプリのURL末尾に <b>?reset=1</b> を付けて一度開きます（ホーム画面に追加する前のテスト用）。</p>
             </div>
@@ -166,7 +178,7 @@
     <div class="toast" id="toast"><div class="label" id="toastLabel">New Answer</div><div id="toastText"></div></div>
 
     <script type="module">
-        import { isDemo, onHostAuth, hostSignIn, hostSignUp, hostSignOut, watchAnswers, deleteAllAnswers } from './sync.js';
+        import { mode as syncMode, isDemo, onHostAuth, hostSignIn, hostSignUp, hostSignOut, watchAnswers, deleteAllAnswers, setHostKey, getHostKeyString } from './sync.js';
 
         const $ = (id) => document.getElementById(id);
         const TOTAL_STEPS = 4;
@@ -187,21 +199,40 @@
 
         // ---------- Auth ----------
         onHostAuth((user) => {
+            const authCard = syncMode === 'relay' ? 'keyCard' : 'loginCard';
             if (user) {
-                $('loginCard').hidden = true;
+                $(authCard).hidden = true;
                 $('dash').hidden = false;
-                $('logoutBtn').hidden = isDemo;
+                $('logoutBtn').hidden = syncMode !== 'firebase';
+                $('copyKeyBtn').hidden = syncMode !== 'relay';
                 start();
             } else {
                 stop();
                 $('dash').hidden = true;
-                $('loginCard').hidden = false;
-                setLive('', 'SIGNED OUT');
+                $(authCard).hidden = false;
+                setLive('', syncMode === 'relay' ? 'NO KEY' : 'SIGNED OUT');
             }
         }).catch((e) => {
             setLive('err', 'ERROR');
             $('loginCard').hidden = false;
             $('loginErr').textContent = 'Firebase を読み込めませんでした（通信状況を確認してください）';
+        });
+
+        // ---------- Host Key（ログイン不要方式） ----------
+        $('keyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            $('keyErr').textContent = '';
+            try { await setHostKey($('keyInput').value); }
+            catch (_) { $('keyErr').textContent = '鍵の形式が正しくありません。もう一度コピーしてください。'; }
+        });
+        $('copyKeyBtn').addEventListener('click', async () => {
+            const url = location.origin + location.pathname + '#key=' + getHostKeyString();
+            try {
+                await navigator.clipboard.writeText(url);
+                $('copyKeyBtn').textContent = '✓ コピーしました（ホーム画面のアプリに貼り付け）';
+            } catch (_) {
+                prompt('このURLをコピーしてください', url);
+            }
         });
 
         let signUpMode = false;
@@ -235,6 +266,11 @@
             setLive('', 'CONNECTING');
             known = null;
             unsubscribe = await watchAnswers((answers, err) => {
+                if (err && err.code === 'relay-unreachable') {
+                    setLive('err', 'RETRYING');
+                    render(answers);
+                    return;
+                }
                 if (err) {
                     setLive('err', 'NO ACCESS');
                     $('log').innerHTML = `<p class="empty">読み取り権限がありません（${esc(err.code)}）。<br>firestore.rules の HOST_UID を確認してください。</p>`;

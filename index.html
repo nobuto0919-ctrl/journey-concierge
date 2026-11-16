@@ -599,6 +599,8 @@
         if (new URLSearchParams(location.search).has('reset')) {
             localStorage.removeItem(STATE_KEY);
             localStorage.removeItem('ajc-outbox');
+            localStorage.removeItem('ajc-sent');
+            localStorage.removeItem('ajc-resent-at');
             const p = new URLSearchParams(location.search);
             p.delete('reset');
             history.replaceState(null, '', location.pathname + (p.toString() ? '?' + p : ''));
@@ -726,7 +728,7 @@
             if (!el || state.done[step]) return;
             const card = $(`step${step}`);
             const options = [...card.querySelectorAll('.option-btn')];
-            const memo = $(`input${step}`).value.trim();
+            const memo = $(`input${step}`).value.trim().slice(0, 400);
             const answer = {
                 step,
                 stepLabel: card.querySelector('.step-number').textContent.trim(),
