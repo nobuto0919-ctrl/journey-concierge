@@ -181,7 +181,7 @@
         import { mode as syncMode, isDemo, onHostAuth, hostSignIn, hostSignUp, hostSignOut, watchAnswers, deleteAllAnswers, setHostKey, getHostKeyString } from './sync.js';
 
         const $ = (id) => document.getElementById(id);
-        const TOTAL_STEPS = 4;
+        const TOTAL_STEPS = 8;
         const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         const fmt = (iso) => iso ? new Date(iso).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—';
 
@@ -294,7 +294,7 @@
 
             // Progress
             const doneSteps = new Set(answers.map((a) => a.step));
-            const names = ['Departure', 'Transit', 'Arrival', 'Night'];
+            const names = ['Meet Up', 'Destination', 'Transit', 'Check-in', 'After Dinner', 'Morning', 'Lunch', 'Afternoon'];
             $('progress').innerHTML = Array.from({ length: TOTAL_STEPS }, (_, i) =>
                 `<div class="p-step ${doneSteps.has(i + 1) ? 'done' : ''}"><b>0${i + 1}</b>${names[i]}</div>`).join('');
             $('lastSeen').textContent = answers.length

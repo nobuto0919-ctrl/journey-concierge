@@ -313,6 +313,71 @@
             box-shadow: inset 0 0 0 3px var(--bg-color);
         }
 
+        /* 複数選択：四角いチェック */
+        .option-btn.multi .option-radio { border-radius: 5px; }
+
+        .step-hint {
+            font-size: 0.65rem;
+            letter-spacing: 0.12em;
+            color: var(--text-sub);
+            margin: -12px 0 16px;
+        }
+
+        /* 5段階スケール */
+        .scale { margin-bottom: 16px; }
+        .scale-ends {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            margin-bottom: 14px;
+        }
+        .scale-ends span { flex: 1; }
+        .scale-ends span:last-child { text-align: right; }
+        .scale-track {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 4px;
+        }
+        .scale-track::before {
+            content: '';
+            position: absolute;
+            left: 16px; right: 16px; top: 50%;
+            height: 1px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--card-border) 50%, var(--accent-blue));
+            opacity: 0.6;
+        }
+        .scale-dot {
+            position: relative;
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            border: 2px solid var(--text-sub);
+            background: var(--bg-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-appearance: none;
+        }
+        .scale-dot:nth-child(1), .scale-dot:nth-child(5) { width: 34px; height: 34px; }
+        .scale-dot:nth-child(3) { width: 20px; height: 20px; }
+        .scale-dot.selected {
+            border-color: var(--accent-blue);
+            background: var(--accent-blue);
+            box-shadow: inset 0 0 0 4px var(--bg-color), 0 0 15px var(--accent-glow);
+        }
+        .scale-readout {
+            margin-top: 14px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            min-height: 1.4em;
+        }
+        .scale-readout.chosen { color: var(--accent-blue); }
+        .step-card.done .scale-dot { pointer-events: none; }
+        .step-card.done .scale-dot:not(.selected) { opacity: 0.45; }
+
         /* 送信後は選び直せない（シークレット進行） */
         .step-card.done .option-btn { pointer-events: none; }
         .step-card.done .option-btn:not(.selected) { opacity: 0.45; }
@@ -397,7 +462,9 @@
         .step-card.sealed .step-question,
         .step-card.sealed .options-group,
         .step-card.sealed .text-input-wrapper,
-        .step-card.sealed .submit-btn { display: none; }
+        .step-card.sealed .submit-btn,
+        .step-card.sealed .step-hint,
+        .step-card.sealed .scale { display: none; }
         .step-card.sealed .sealed-note {
             display: flex;
             justify-content: space-between;
@@ -543,41 +610,65 @@
             </div>
         </div>
 
+        <!-- STEPS:BEGIN -->
         <!-- Step 1 -->
-        <div class="step-card" id="step1">
-            <div class="step-number">Step 01 // Departure</div>
-            <div data-secret="1" data-enc="XwsHFUkGHgYWEFJMEB0AAkoUFgodFwAKHEVbh9TkhvL7kebLi8f2htbQlPDAhfjri8jpkefkgO7HgOv2kebPhd/5huHjkebCiu7ggOjxkebygO7xgOjhndv6X0AKCh9beEdFQ09OQ0lFUkdFQ1MKCh9FEQsEEBxTQQYVBg4KDRxDBBsKBxdHXWVOQ0lFUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMDBkRGwgLTg0aDUtFHQkGDwYNCFRHAQIJBgwaLBkRGwgLS15CQx0NGxRMQVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZFg4TQwwCAhoWT0UKExsHDAdIAAYBCgBMXVVKFg4TXWVOQ0lFUkdFQ09OQ0lFUkdFQ09OQ1UWAgYLXYn5xozdyoTn8YrR+4rn/oTkxYzu4o/Ax4Pd6YzvzY/d24HW6ozvy47b/IL00Izv9Irk9oTn04ztyIrm04TkyIj38Yrn9oTk9ozs74rk7YTk51NBEBkEHFlvQ09OQ0lFUkdFQ09OQ0lFUltKBwYYXWNFUkdFQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHHRcRCgAATgsRHEVFDAENDwAGGVpHEAoCBgoRPRcRCgAAS1hJUhMNChxHQVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0BEx0MHQlIEQ4KCgZHTFtKBwYYXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUlsWEw4AXYD47IHyxorW24rk3IL5xIru8Y7/9oTkyYzsy4rmwYTn3Iztwo7MyI7z8IzvxIrl84Tk6YjLzorn+IHV9Irm5Yrk1YTmzIzszIrm3YTnzIzv9Irk7YTk51NBEBkEHFlvQ09OQ0lFUkdFQ09OQ0lFUltKBwYYXWNFUkdFQ09OQ0lFUkdZTAsHFVdvUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMFwwdBkoMDR8bF0QSAAYVEwocQVdvUkdFQ09OQ0lFUkdFQ09OQ1URFx8RAh0LAkkVHgYGBgcBDw0AAFpHi+jEhP3UkebPgOzEgOvKkeXNgO3XgOrtkeXhh9TkgOjLlNfyhufogOv3kebMgO7ogOj7ndvth9TVhe3qndvsQU8HB1RHGwkVFhtfQVdZXRMAGxsPEQwETG1FQ09OQ0lFUkdFQ09STA0MBFlvQ09OQ0lFUkdFQ09OXwsQBhMKDU8NDwgWAVpHEBoMDgARXwURDU1OCg1YUAURDV5MQwYLEQsMAARTQRoQEAoMFzwaBhlNQ05HQwsHEAgHHgIBXYnf2YzL6ITk9IzvxY/J04Tk24bu0Yrn8ltKARoaFwYLTA=="></div>
+        <div class="step-card locked" id="step1" data-type="scale">
+            <div class="step-number">Step 01 // Meet Up</div>
+            <div data-secret="1" data-enc="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"></div>
+        </div>
 
-            <div id="reveal1" style="display: none;">
+        <!-- Step 2 -->
+        <div class="step-card locked" id="step2" data-type="single">
+            <div class="step-number">Step 02 // Destination</div>
+            <div data-secret="2" data-enc="aU9OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUBQRBh9DEhwAARMMDAFMXY3e+IL+/YzvzYHN6oLa1on5xo/y94/E74zu4ork24Tn8IzvyY/V5YLt5YzvxIDk/ITk94zv9Irk7YTk54DS/FVKFg4TXWVOQ0lFUkdFQ09OQ0lZFg4TQwwCAhoWT0UKExsHDAcWXwAXDBoeQVdvUkdFQ09OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUAgVFwYBDUQHBglHQwAAAAUMEQxYQRwLDwwGBigVFwYBDUFXXkcRCwYdSktbeEdFQ09OQ0lFUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMDBkRGwgLTh0PBwAKUFlZTAsHFVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZEB8PDVeD5cKA29eN4fuAzf+G4eON4s+G8uaDxtqK2+OG88mD28aI0OCG88+C3eGL8tqG8/CG4uuN4dmG8cyG4M6N4sKC6/WG4euN4vyG8OuG4vCN4u1ZXRQVAgFQaUlFUkdFQ09OQ0lFUkdFQ09STA0MBFlvQ09OQ0lFUkdFQ09OQ0lFUlsBChlOAAUEARRYQQAeFwAKHEoHFwFMQwYLEQsMAARTQRoAHgIGFyAeFwAKHE9XT08aCwAWW0VbaU9OQ0lFUkdFQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHHRcRCgAAThsEFg4KQVFSTA0MBFlvQ09OQ0lFUkdFQ09OQ0lFUkdFQ09SEBkEHFmM/vGI9MyAyt+G4sGL/86A8vWC+euN4sOG8M+G4NyN4daG8caCytWH9fqG88CG4+6N4uOC18qG4eWI0/6A+uGG4siN4MaG8MiG4MCN4caG8/CG4vCN4u1ZXRQVAgFQaUlFUkdFQ09OQ0lFUkdFQ09STA0MBFlvQ09OQ0lFUkdFQ09OX0YBGxFbaU9OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUBMAGxtDCgcVBxNIFB0PExkAAEVbaU9OQ0lFUkdFQ09OQ0lFUkdZFwoWFwgXFwZFEwMPAAwNHQsBBh1TQYHi2IDx0ozvyYrm2ITnzIzsy4rny4Tm64zs543e+ITkzYne9Izt9ITn8Yzvyork9ITk/YDS643eyYHh7IDS6ktFGwNYQQYAExwRQEVbX0AaBhERExUAAlFkQ0lFUkdFQ09OQ0lFTkgBChlQaUlFUkdFQ09OQ0lFUlsHFhsaDAdFEQsEEBxTQRoQEAoMF0IMFwdHUg4BXk0MFwdXUEcKDQwCCgoOT0UWFg0DCh02BgIVS11HQUkBGxQEAQMLB1eDw92AzfWN4v6G88GDz86N4tGM8tWG4e9STAsQBhMKDVE="></div>
+            <div id="reveal2" style="display: none;">
                 <!-- 公開日時まではこちらを表示 -->
                 <div class="reveal-box" id="destSealed">
                     <div class="reveal-label">Destination // Classified</div>
                     <div class="reveal-destination">• • •</div>
-                    <div class="reveal-desc">行き先は 11.21 当日に明かされます。どちらを選んでも、心と体を解きほぐす特別な旅になることだけはお約束します。</div>
+                    <div class="reveal-desc">行き先は、まもなく明かされます。どちらを選んでも、心と体を解きほぐす特別な旅になることだけはお約束します。</div>
                 </div>
-                <div class="reveal-box" id="destOpen" style="display: none;">
-                    <div data-secret="dest" data-enc="XwsHFUkGHgYWEFJMEQwTFwYJTgMPAQwJUFkhBhwaCgcEBg4KDU88Bh8AEwsAB1NBBwATTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ1MKCh9FEQsEEBxTQRsABAIED0IKBhoRGwkEFwYBDUtbm/r3hczAhPXpTkgBChlQaUlFUkdFQ09OQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHEQoYBggJXwMAEAxMXYrk24Tkwozs6orn4I7k24zs8Irk1YTn4Yzu4oz144Tk6Izv5Yzg+oTkzIri9Irk3ILBxIry04rl8ILa4Izvy43Y4YTn8YfJwIrk/4Tk2Izv84rk64Ds2ormxork2IHy5ozv74zC+YTk3Yzs6YrkzITk+ozu4VVKFg4TXQ=="></div>
+                <div class="reveal-box" id="destOpen" style="display: none;"><div data-secret="dest" data-enc="aU9OQ0lFUkdFQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHAAITBg4CTgUEEAIJQVEqBhoRGwkEFwYBDUk3FxEAAgMLB1VKFg4TXWVOQ0lFUkdFQ09OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUBUAFQoPD0QBFxQRCgEPFwAKHEVbivL8hcrLlfvpX0AKCh9beEdFQ09OQ0lFUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMEQwTFwYJTgsLEApHTITkyozvworn+4Tn8Ybv24rn4YTkxIzs4Yrl84L18ozv6Irk9ILg64zvzIzp5YTkzYrKxIz5woTl4YrR4Irk2oPY8Izs8YHC0YTk7ozv2Irk4oTk+ojn2ozt14TkyYn55ork/oLC6Izv3Yrn+ITk3Yzv+orl8FtKBwYYXQ=="></div>
                 </div>
             </div>
         </div>
 
-        <!-- Step 2 -->
-        <div class="step-card locked" id="step2">
-            <div class="step-number">Step 02 // Transit</div>
-            <div data-secret="2" data-enc="XwsHFUkGHgYWEFJMEB0AAkoUFgodFwAKHEVbhNvqUI/88I7z8IzvzY7CyYLu9ozu4orkzITk+YzvzI3Y54Tk6Izs6ozC+YTn4ozs6IbZ7VtKBwYYXWNFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0BEx0MHQkWTggcDBwVUFlvQ09OQ0lFUkdFQ09OQ0lFUlsBChlOAAUEARRYQQAeFwAKHEoHFwFMQwYLEQsMAARTQRoAHgIGFyAeFwAKHE9XT08aCwAWW0VbaU9OQ0lFUkdFQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHHRcRCgAAThsEFg4KQVFSTA0MBFlvQ09OQ0lFUkdFQ09OQ0lFUkdFQ09SEBkEHFmG4dCN4NWG8fiG4OWN4MKM1eKG4siG0d6G88SG4vCN4vqG88eG4eCN4eOG88mMxOqL3+iG88CN5taN4v2G8/CG4eaN4uGKzuZZTBweAgdbeEdFQ09OQ0lFUkdFQ09OQ0lZXQMMFVFkQ0lFUkdFQ09OQ0lFUkdFQ1MKCh9FEQsEEBxTQQYVBg4KDUIMFwdHUggLAAMHAAJYUBQADwoNFyYVBg4KDUdcT0kRGg4WSk1QaUlFUkdFQ09OQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHDB8aCgYLXxUEBwYBQVdZXQMMFVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZARcEDVGJ9/GG8+OG4daN4c2G8duG4OuN4sGDys6G4uSN4u2G8e6G4MWN4NqG8MiG4siN4cKG8fKG4ciI0/6A+uGK3+5STBoVEwlbaU9OQ0lFUkdFQ09OQ0lFUkdZTAsHFVdvUkdFQ09OQ0lFUkdFX0AKCh9beEdFQ09OQ0lFUkdFQ1MKCh9FEQsEEBxTQR0AChNICgEeFh1IBRUEEx8LEUtbeEdFQ09OQ0lFUkdFQ09OQ0lZBgIdFw4cBghFAgsEAAoGDAUBFxVYQYvV6Yrk3IHV9Irm5Yrn4IPd44fG44bZ+oPe2Inq7IbZ+0VFCgtTQQALAhIRUU1QX0YRFx8RAh0LAldvUkdFQ09OQ0lFUkdFX0AKCh9beEdFQ09OQ0lFUkdFQ1MMFh0RHQlFAAMPEBpYUBQQAQIHF0QHBglHQwYKXksHBglXQU8BDQoJGwQOXk0dFgsIGxM2FwoeS1tMUEcBChwPAQUAFlmD0tWLzfOG8/CG4smIz8iG89+M492N4elZXQUQFxsBDVc="></div>
-        </div>
-
         <!-- Step 3 -->
-        <div class="step-card locked" id="step3">
-            <div class="step-number">Step 03 // Arrival</div>
-            <div data-secret="3" data-enc="XwsHFUkGHgYWEFJMEB0AAkoUFgodFwAKHEVbhsHRgOjOl+/VhPLujNXklNLRi87NgOjOlfrlhfTRgOjtkeb6gO3ngOnkkebbgO70gOjKkebMgO7oiujrkebxgO73jNX6TkgBChlQaUlFUkdFQ09OQ0lFUlsBChlOAAUEARRYQQAeFwAKHBRIBB0BFhlHTG1FQ09OQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHDB8aCgYLXwURDU1ODAcGHg4GCFJMEAwJFwQRLB8aCgYLWlRJQxsGChpMUFlvQ09OQ0lFUkdFQ09OQ0lFUkdFQ09SBwATUgQJAhwdXksKAhMMDAFDEQgBGwhHXVNBBwATTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ1MdEwgLTILf4Izv54/wxYL504zvzYzg3oL58Yzs8Yrk+IHwwInDyork5YTkxYzu4oHTwYHczIzvxIrkzITkwIzv/Irn+IHdyozv3Yrn+VtKEB8PDVdvUkdFQ09OQ0lFUkdFQ09OQ1VKFg4TXWVOQ0lFUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMDBkRGwgLTg0aDUtFHQkGDwYNCFRHAQIJBgwaLBkRGwgLS1xCQx0NGxRMQVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZFg4TQwwCAhoWT0UKExsHDAdIAAYBCgBMXVVKFg4TXWVOQ0lFUkdFQ09OQ0lFUkdFQ09OQ1UWAgYLXYfd8orn9oTk6IzvyYzf8YLF14zvxI7d84Hyxobv6YrkwYjZ5Yf15Izq0YTk6Izs6oziyITn6Izs6Yrn4YTk94zs24rm14Tm34zs2orn4IPY8IbG8FVKARcEDVFkQ0lFUkdFQ09OQ0lFUkdFQ1NBBwATTG1FQ09OQ0lFUkdFQ09STA0MBFlvQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHBgIdF0IHDRkQBkoSEQ4eEwwXUFlvQ09OQ0lFUkdFQ09OQ0lFUlsRBhcaAhsAE0cVDw4NBgEKHgMAEVJMh9LvkebLhd/5huHjkeX3h9fui8Hlndvth9TVhe3qndvsQU8HB1RHGwkVFhtdQVdZXRMAGxsPEQwETG1FQ09OQ0lFUkdFQ09STA0MBFlvQ09OQ0lFUkdFQ09OXwsQBhMKDU8NDwgWAVpHEBoMDgARXwURDU1OCg1YUAURDVxMQwYLEQsMAARTQRoQEAoMFzwaBhlNQU5HQwsHEAgHHgIBXYnf2YzL6ITk9IzvxY/J04Tk24bu0Yrn8ltKARoaFwYLTA=="></div>
+        <div class="step-card locked" id="step3" data-type="scale">
+            <div class="step-number">Step 03 // Transit</div>
+            <div data-secret="3" data-enc="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"></div>
         </div>
 
         <!-- Step 4 -->
-        <div class="step-card locked" id="step4">
-            <div class="step-number">Step 04 // Special Night</div>
-            <div data-secret="4" data-enc="XwsHFUkGHgYWEFJMEB0AAkoUFgodFwAKHEVbUYn5xo7+3ITkzYny/obZ84LL/IzvzI3e+IHyxozvzVhSlP7ngO7lgOvskefkhObXhuHAkebPi8f2htbQlPDAgOzpgOvGkeTvgOzSgOv3lt3thNvqgOjykebDgO7qgOjbkeb8gO/sgOjvlP/ZgO7Bi9LYkeXkgO7FgOjykebDgO/vgOj4keXpgO7QgOjCkebLhfbsiv/2kebKgO7HgOjjm+brgO76gOj8ndv6X0AKCh9beEdFQ09OQ0lFUkdFQ1MKCh9FEQsEEBxTQQYVBg4KDRxDBBsKBxdHXWVOQ0lFUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMDBkRGwgLTg0aDUtFHQkGDwYNCFRHAQIJBgwaLBkRGwgLS1tCQx0NGxRMQVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZFg4TQwwCAhoWT0UKExsHDAdIAAYBCgBMXVVKFg4TXWVOQ0lFUkdFQ09OQ0lFUkdFQ09OQ1UWAgYLXYrZy4zB1YTkyYrW4YzFxoTny4ztyYrn0ITkxIzv6Yz57YDxwIngwYrk5YjZ5YfV3ork/YTkx4zv3YrkzY7G/Izv51VKARcEDVFkQ0lFUkdFQ09OQ0lFUkdFQ1NBBwATTG1FQ09OQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHDB8aCgYLXwURDU1ODAcGHg4GCFJMEAwJFwQRLB8aCgYLWlNJQxsGChpMUFlvQ09OQ0lFUkdFQ09OQ0lFUkdFQ09SBwATUgQJAhwdXksKAhMMDAFDEQgBGwhHXVNBBwATTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ1MdEwgLTIDb7YfP8IDB2oTn54zv6Yrk5YTn4Izs74rk2ITnyIzt9orn1YTkxIzu4orm9YTnwIzt6YrmzoTkyIr+8ork44TkxYzs5Yrk0YTk/Izs6YDk/ITk94zv+lVKARcEDVFkQ0lFUkdFQ09OQ0lFUkdFQ1NBBwATTG1FQ09OQ0lFUkdFQ09STA0MBFlvQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHBgIdF0IHDRkQBkoSEQ4eEwwXUFlvQ09OQ0lFUkdFQ09OQ0lFUlsRBhcaAhsAE0cVDw4NBgEKHgMAEVJMh9LvkebLhd/5huHjkeX3h9fui8Hlndvth9TVhe3qndvsQU8HB1RHGwkVFhtaQVdZXRMAGxsPEQwETG1FQ09OQ0lFUkdFQ09STA0MBFlvQ09OQ0lFUkdFQ09OXwsQBhMKDU8NDwgWAVpHEBoMDgARXwURDU1OCg1YUAURDVtMQwYLEQsMAARTQRoQEAoMFzwaBhlNRk5HQwsHEAgHHgIBXYrA743f9ITk+ozs6FVKEBIRFwAAXWNvUkdFQ09OQ0lFUkdFXwsHFUkMFlpHEQoYBggJRkVFEBsXDwxYUAMMEB8CAhBfUgkKDQpVQVdvUkdFQ09OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUBUAFQoPD0QHHR9HXWVOQ0lFUkdFQ09OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUBUAFQoPD0QJEwUAD01QKQYQAAkAGk8tDAcDGxUIBgtSTA0MBFlvQ09OQ0lFUkdFQ09OQ0lFUkdFQ09SBwATUgQJAhwdXksXFxEAAgNDBwwWBg4LAhsHDAdHTDQABk8XDBxFBggLCggGF0dZXQMMFVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZFg4TQwwCAhoWT0UXBhkLAgVIFgIWAE1QgOj8kebcgO7IgOjLkeTPgO3BgOvNkeXcgOzmgOv3lO7agO3kgOjbkebygO7xgOnnlPvlhtHigOjLlO7sgO7BgOnkkeTigO3NgOrvkeTZgO7AhtHIkebCivnlgOjokebbgO73gOnnTkgBChlQaUlFUkdFQ09OQ0lFUkdFQ09STA0MBFlvQ09OQ0lFUkdFQ09OX0YBGxFb"></div>
+        <div class="step-card locked" id="step4" data-type="multi">
+            <div class="step-number">Step 04 // Check-in</div>
+            <div data-secret="4" data-enc="aU9OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUBQRBh9DEhwAARMMDAFMXYrm84TnxIzt4Irn3YTnx4zt0Irk5YTk3Yzv9Irk7YjZ4ozv8Irk3ITk4Yzvy4rk3I7k7Yzv94rk5YHz2ozvzIbZ7VtKBwYYXWNFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0dFwwVXw8MDRtMXSQQHhMMEwMLQyoNHQ4GBk+M4/1FkebhgO7hgOjBkebCgO3siujdkebcgO7QgOj8TkgBChlQaUlFUkdFQ09OQ0lFUlsBChlOAAUEARRYQQAeFwAKHBRIBB0BFhlHTG1FQ09OQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHDB8aCgYLXwURDU8DFgURG0VFDAENDwAGGVpHFwAJBAUAPRcRCgAAS11JUhMNChxHQVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0BEx0MHQlIEQ4KCgZHTFtKBwYYXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUlsWEw4AXYrk3ITn8Izv0Irn+ITk+ozs6FVKARcEDVFkQ0lFUkdFQ09OQ0lFUkdFQ1NBBwATTG1FQ09OQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHDB8aCgYLXwURDU8DFgURG0VFDAENDwAGGVpHFwAJBAUAPRcRCgAAS11JUhMNChxHQVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0BEx0MHQlIEQ4KCgZHTFtKBwYYXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUlsWEw4AXY/w0YDI9Yzv9Irk1ITk3Izs6FVKARcEDVFkQ0lFUkdFQ09OQ0lFUkdFQ1NBBwATTG1FQ09OQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHDB8aCgYLXwURDU8DFgURG0VFDAENDwAGGVpHFwAJBAUAPRcRCgAAS11JUhMNChxHQVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0BEx0MHQlIEQ4KCgZHTFtKBwYYXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUlsWEw4AXYrk+I7Hy4r/4Yrk2YLgxozs6FVKARcEDVFkQ0lFUkdFQ09OQ0lFUkdFQ1NBBwATTG1FQ09OQ0lFUkdFQ09STA0MBFlvQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHBgIdF0IHDRkQBkoSEQ4eEwwXUFlvQ09OQ0lFUkdFQ09OQ0lFUlsRBhcaAhsAE0cVDw4NBgEKHgMAEVJMgOvhkebGgO7IgOjakeb6gO7qgOj2kebNgO7igOjnkeXpgO7ejNXtltzehevhjNXsUEcMB1JMCgcVBxNRQVFSTB0AChMEEQoPXWNFUkdFQ09OQ0lFUkdZTAsHFVdvUkdFQ09OQ0lFUkdFXw0bFx0KHEcGDw4dEFRHARIHDgYaTgsRHEVFCgtTQQsRHFNHQwAAAAUMEQxYQRwbAQQMBjQRBh9GV0BHUgMMEA4MDwwBTIHU2YrA+Yrk5YTkxYnCworkyo7l0Yzs41VKEBIRFwAAXQ=="></div>
         </div>
+
+        <!-- Step 5 -->
+        <div class="step-card locked" id="step5" data-type="scale">
+            <div class="step-number">Step 05 // After Dinner</div>
+            <div data-secret="5" data-enc="aU9OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUBQRBh9DEhwAARMMDAFMXYzB7oTk94zvzIrn4YTkzYzv4Yrk2oTkzIzvyork9ITk+ozs6IbZ7VtKBwYYXWNFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0dFwwVXw8MDRtMXToGEwsAQ43u90mG886G4s6N4eCG88yN3P6N4u2G8+yG4f2H4tGG8PSG4siN4uaG88eG4vqN4u1ZXQMMFVFkQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHEAwPDwxHUgMEFw5DDwwDBlpHisvGhu/gkeX3gO7qgOvokebhgO3jhcTMkebhgO7IgOjakeXuQU8KAh0EXxUMBAcaXkuM8c+A0uSN4s6G8NOG4MKN4d2G8cqG4vaN4eJHTG1FQ09OQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHEAwPDwxIFwkBEE1QXxoVEwlbisvGhu/gkeX3gO7qgOvokebhgO3jhcTMkebhgO7IgOjakeXuX0AdEwgLTFsWEw4AXYDm2oLU6IzvxIrnxoTmzozs14rm34Tk+ozs6FVKARcEDVFSTA0MBFlvQ09OQ0lFUkdFQ09OQ0lFUlsBChlOAAUEARRYQRwNAgUAXxMXAgwFQVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZARoaFwYLUhMcEwpTQQsQBhMKDU1OAAUEARRYQRwNAgUAXwMKF01ODAcGHg4GCFJMEAwJFwQRMAwPDwxNR0tFUkNOFwEMAU5HQw4cCghIHgYHBgNTQVhHTFtKARoaFwYLTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ1MMFh0RHQlFFxYeBlRHEBIRFwAAQUkGHgYWEFJMEAoEHgJIBwAaQUkKHAQJCgwFXksWFwsAABs9AAgJF09QT09cT0kRGg4WSk1OAhsME0oJAg0LD1RHQEVbX0AMFh0RHQlbaU9OQ0lFUkdFQ09OQ0lFUkdFQ09OXwsQBhMKDU8aGhkAT0UHFhsaDAdHUgQJAhwdXksWEQYJBkIKDB1HUggLAAMHAAJYUBQADwoNFzoGEwsAS1pCQ1pJUhMNChxHQUkEAA4ETgMPAQwJT0VWQVFSTAsQBhMKDVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZEBIRFwAAQx0cAgJYQQ0bFx0KHEVFAAMPEBpYUBQGAgMLTg0KBkVFDAENDwAGGVpHEAoCBgoRIQQEDwpGVkVFRktFFwcHEEBHUgYXCg5DDwgHFwtYQVtMXVVKEBIRFwAAXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUlsHFhsaDAdFBh4VBlJMARwRBggLQU8NDwgWAVpHEAwPDwxIFggRQU8BDQoJGwQOXk0dBgUAERM2AA4CBkFQXkdQT08aCwAWW0VFAh0HAkQJEwUAD1JMVktbTkgHFhsaDAdbeEdFQ09OQ0lFUkdFQ09OQ0lZXQMMFVFkQ0lFUkdFQ09OQ0lFUkdFQ1MKCh9FEQsEEBxTQRoGEwsATh0LAg0KBxNHQwYKXksXFwYBDBoaVktbkebMgO7PgOvskebOi9D/gOjhndv6X0AKCh9beEdFQ09OQ0lFUkdFQ1NBBwATTG1FQ09OQ0lFUkdFQ09SBwATUgQJAhwdXksRFx8RTgYAExwRXxAXAh8eBhtHTG1FQ09OQ0lFUkdFQ09OQ0lFThMAGxsPEQwEUhcJAgwLCwYJFgIXXk2K2OOG88mD0/iL6++G8PWB2++Gy+mKzu+B2NSI5+aKzu5HQwYKXksMHBcQF1pMXVVKBgIdFw4cBghbeEdFQ09OQ0lFUkdFQ1NBBwATTG1FQ09OQ0lFUkdFQ09SARwRBggLQwwCAhoWT0UWFg0DCh1IEBMLQU8HB1RHEBMLVk1ODAcGHg4GCFJMEBwHHw4RMBsLE0FQW0VFBwYdAgsJFwNbhd7Uhsf/kebygO7IhcXEkebdiu/cgOvlTkgHFhsaDAdb"></div>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="step-card locked" id="step6" data-type="scale">
+            <div class="step-number">Step 06 // Morning</div>
+            <div data-secret="6" data-enc="aU9OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUBQRBh9DEhwAARMMDAFMXVuD5cKC+MGN4seD7vqK3+6I//SG8/OG4sCN4fqG88mA6uKN4sKH8sFZTAsHFVdvUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMEB0AAkoNCgEaQVc2EQYJBk+M4/1FkebMgO7PgOvskebOi9D/gOjhkebugO38iujdkeX2gO7JgOjqkebFgO77gOjhTkgBChlQaUlFUkdFQ09OQ0lFUlsBChlOAAUEARRYQRwNAgUAUEcBAhsPTgUAFBNYQYrr4I/c3YTkyIfP74rk0YTkxYzv3Irn+UVFBw4aAkQXGwANF1JMhfX4kebLgO7khfzGlMrMgO7Fi8jpkebGgO7IgOjakeXuQVFkQ0lFUkdFQ09OQ0lFUkdFQ1MKCh9FEQsEEBxTQRoGEwsATgoABxpHTFsWEw4AXYzg8YHczIzvyIHE/oTkwIzvxYrkzYTn6FNBEBkEHFlZEB8PDVeD7vqG4sGN4uOD58SDzsaN4sKN0+uG4syN4s+G89iG4eRSTBoVEwlbX0AKCh9beEdFQ09OQ0lFUkdFQ09OQ0lZFg4TQwwCAhoWT0UWAA4CBkQRAAYGCE1QaUlFUkdFQ09OQ0lFUkdFQ09OQ0lFTgUQFxsBDUkRCxcAXk0MFh0RHQlHQwwCAhoWT0UWAA4CBkQBHRNHQwAAAAUMEQxYQRwLDwwGBjQGAgMLS19JUlZJQxsGChpMUEcEEQYPTgUEEAIJXk1fQVdZXQUQFxsBDVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZARoaFwYLUhMcEwpTQQsQBhMKDU1OAAUEARRYQRwNAgUAXwMKF01ODAcGHg4GCFJMEAwJFwQRMAwPDwxNREtFUUNOFwEMAU5HQw4cCghIHgYHBgNTQVtHTFtKARoaFwYLTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ1MMFh0RHQlFFxYeBlRHEBIRFwAAQUkGHgYWEFJMEAoEHgJIBwAaQUkKHAQJCgwFXksWFwsAABs9AAgJF09TT09dT0kRGg4WSk1OAhsME0oJAg0LD1RHQUVbX0AMFh0RHQlbaU9OQ0lFUkdFQ09OQ0lFUkdFQ09OXwsQBhMKDU8aGhkAT0UHFhsaDAdHUgQJAhwdXksWEQYJBkIKDB1HUggLAAMHAAJYUBQADwoNFzoGEwsAS1lCQ11JUhMNChxHQUkEAA4ETgMPAQwJT0VRQVFSTAsQBhMKDVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZEBIRFwAAQx0cAgJYQQ0bFx0KHEVFAAMPEBpYUBQGAgMLTg0KBkVFDAENDwAGGVpHEAoCBgoRIQQEDwpGVUVFR0tFFwcHEEBHUgYXCg5DDwgHFwtYQVpMXVVKEBIRFwAAXWNFUkdFQ09OQ0lFUkdFQ09OX0YBGxFbaU9OQ0lFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0dAAgJF0oXBg4KDBwRUEcMB1JMEQwEFggQF1lMXYrk24Tkwozs6ork2Y/a8ozv54bZ7VtKBwYYXWNFUkdFQ09OQ0lFUkdZTAsHFVdvUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMFwwdBkoMDR8bF0QSAAYVEwocQVdvUkdFQ09OQ0lFUkdFQ09OQ1URFx8RAh0LAkkVHgYGBgcBDw0AAFpHh9TkgOjLlNfyhufogOv3lt/li8fujNXtltzehevhjNXsUEcMB1JMCgcVBxNTQVFSTB0AChMEEQoPXWNFUkdFQ09OQ0lFUkdZTAsHFVdvUkdFQ09OQ0lFUkdFXw0bFx0KHEcGDw4dEFRHARIHDgYaTgsRHEVFCgtTQQsRHFFHQwAAAAUMEQxYQRwbAQQMBjQRBh9GVUBHUgMMEA4MDwwBTIHU2YrA+Yrk5YTkxYnCworkyo7l0Yzs41VKEBIRFwAAXQ=="></div>
+        </div>
+
+        <!-- Step 7 -->
+        <div class="step-card locked" id="step7" data-type="scale">
+            <div class="step-number">Step 07 // Lunch</div>
+            <div data-secret="7" data-enc="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"></div>
+        </div>
+
+        <!-- Step 8 -->
+        <div class="step-card locked" id="step8" data-type="scale">
+            <div class="step-number">Step 08 // Afternoon</div>
+            <div data-secret="8" data-enc="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"></div>
+        </div>
+        <!-- STEPS:END -->
     </div>
 
     <!-- 未送信があるときだけ表示 -->
@@ -595,7 +686,7 @@
         const openAt = (step) => STEP_OPEN_AT && STEP_OPEN_AT[step] ? new Date(STEP_OPEN_AT[step]) : null;
         const isOpen = (step) => { const t = openAt(step); return !t || now() >= t; };
 
-        const TOTAL_STEPS = 4;
+        const TOTAL_STEPS = 8;
         const STATE_KEY = 'ajc-state';
         const THEME_COLORS = { dark: '#0b0f19', light: '#f8fafc', silver: '#1e293b' };
 
@@ -651,14 +742,57 @@
         };
 
         // ---------- Steps ----------
+        // selections[step]：single は選んだ番号、multi は番号の配列、scale は 1〜5
+        const cardOf = (step) => $(`step${step}`);
+        const optionsOf = (step) => [...cardOf(step).querySelectorAll('.option-btn')];
+
         window.selectOption = (step, element) => {
             if (state.done[step]) return;
-            const card = $(`step${step}`);
-            card.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+            optionsOf(step).forEach(btn => btn.classList.remove('selected'));
             element.classList.add('selected');
-            selections[step] = element;
+            selections[step] = optionsOf(step).indexOf(element);
             $(`btn${step}`).disabled = false;
         };
+
+        window.toggleOption = (step, element) => {
+            if (state.done[step]) return;
+            element.classList.toggle('selected');
+            selections[step] = optionsOf(step).map((b, i) => b.classList.contains('selected') ? i : -1).filter(i => i >= 0);
+            $(`btn${step}`).disabled = selections[step].length === 0;
+        };
+
+        function scaleText(step, v) {
+            const sc = cardOf(step).querySelector('.scale');
+            const L = sc.dataset.left, R = sc.dataset.right;
+            return [`${L}！`, `どちらかといえば、${L}`, 'どちらでもいい', `どちらかといえば、${R}`, `${R}！`][v - 1];
+        }
+        function paintScale(step, v) {
+            const dots = [...cardOf(step).querySelectorAll('.scale-dot')];
+            dots.forEach((d, i) => d.classList.toggle('selected', i === v - 1));
+            const r = $(`readout${step}`);
+            r.textContent = scaleText(step, v);
+            r.classList.add('chosen');
+        }
+        window.selectScale = (step, v) => {
+            if (state.done[step]) return;
+            paintScale(step, v);
+            selections[step] = v;
+            $(`btn${step}`).disabled = false;
+        };
+
+        function choiceText(step, value) {
+            const type = cardOf(step).dataset.type;
+            if (type === 'scale') return `${scaleText(step, value)}（${value}/5）`;
+            const texts = optionsOf(step).map(b => b.querySelector('span').textContent.trim());
+            if (type === 'multi') return value.map(i => texts[i]).join('・');
+            return texts[value];
+        }
+        function paintSelection(step, value) {
+            const type = cardOf(step).dataset.type;
+            if (type === 'scale') return paintScale(step, value);
+            const idx = Array.isArray(value) ? value : [value];
+            optionsOf(step).forEach((b, i) => b.classList.toggle('selected', idx.includes(i)));
+        }
 
         function markDone(step, animate) {
             const card = $(`step${step}`);
@@ -696,7 +830,7 @@
             note.innerHTML = `<span class="seal-label">SEALED</span><span class="seal-date">${sealLabel(s)}</span>`;
             $(`step${s}`).appendChild(note);
         }
-        // 公開版では、行き先と Step 2〜4 の中身は読めない形で埋め込まれている（build.py が変換）
+        // 公開版では、行き先と各 Step の中身は読めない形で埋め込まれている（build.py が変換）
         // 公開日時を過ぎたものだけ、ここで元に戻して表示する
         const destIsOpen = () => !DESTINATION_REVEAL_AT || now() >= new Date(DESTINATION_REVEAL_AT);
         const SECRET_KEY = 'concierge';
@@ -730,23 +864,23 @@
         document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && applySeals());
 
         window.submitStep = (step) => {
-            const el = selections[step];
-            if (!el || state.done[step]) return;
-            const card = $(`step${step}`);
-            const options = [...card.querySelectorAll('.option-btn')];
+            const value = selections[step];
+            if (value === undefined || (Array.isArray(value) && !value.length) || state.done[step]) return;
+            const card = cardOf(step);
             const memo = $(`input${step}`).value.trim().slice(0, 400);
             const answer = {
                 step,
                 stepLabel: card.querySelector('.step-number').textContent.trim(),
                 question: card.querySelector('.step-question').textContent.trim(),
-                choice: el.querySelector('span').textContent.trim(),
-                choiceIndex: options.indexOf(el),
+                type: card.dataset.type,
+                choice: choiceText(step, value),
+                choiceIndex: value,
                 memo,
                 clientTime: new Date().toISOString(),
                 device: isStandalone ? 'home-screen-app' : 'browser',
             };
 
-            state.done[step] = { choiceIndex: answer.choiceIndex, memo };
+            state.done[step] = { value, memo };
             save();
             markDone(step, true);
             if (navigator.vibrate) navigator.vibrate(15);
@@ -757,8 +891,7 @@
             for (let s = 1; s <= TOTAL_STEPS; s++) {
                 const d = state.done[s];
                 if (!d) break;
-                const opt = $(`step${s}`).querySelectorAll('.option-btn')[d.choiceIndex];
-                if (opt) opt.classList.add('selected');
+                paintSelection(s, d.value ?? d.choiceIndex);
                 $(`input${s}`).value = d.memo || '';
                 markDone(s, false);
             }
