@@ -205,7 +205,8 @@ async function importHostKey(str) {
 
 /** relay 方式：鍵を手で貼り付けて保存（ホーム画面アプリ用）。正しい鍵か確かめてから保存 */
 export async function setHostKey(str) {
-  const s = str.trim().replace(/^.*key=/, "");
+  // スマホでコピーしたときに混ざる改行・空白は取り除く。URL ごと貼っても鍵だけ取り出す
+  const s = str.replace(/\s+/g, "").replace(/^.*key=/, "");
   await importHostKey(s);
   localStorage.setItem(HOST_KEY, s);
   location.reload();
