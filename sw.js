@@ -2,7 +2,7 @@
 // - 自分のファイル：まずネットから最新を取り、ダメならキャッシュ（電波がなくても開ける）
 // - フォント・Firebase SDK：キャッシュ優先（バージョン固定なので変わらない）
 // ファイルを更新したら VERSION を上げると、古いキャッシュが消えます。
-const VERSION = "ajc-v4";
+const VERSION = "ajc-v5";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -23,7 +23,7 @@ self.addEventListener("install", (e) => {
       .open(VERSION)
       .then((c) =>
         Promise.all([
-          c.addAll(PRECACHE),
+          c.addAll(PRECACHE.map((u) => new Request(u, { cache: "reload" }))),
           // Firebase SDK も先に入れておく（初回からオフラインでも送信待ちに入れられるように）
           ...["firebase-app.js", "firebase-auth.js", "firebase-firestore.js"].map((f) =>
             c.add(new Request(SDK + f, { mode: "cors" })).catch(() => {})
