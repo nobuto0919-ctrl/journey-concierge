@@ -195,7 +195,10 @@
     <div class="toast" id="toast"><div class="label" id="toastLabel">New Answer</div><div id="toastText"></div></div>
 
     <script type="module">
-        import { mode as syncMode, isDemo, onHostAuth, hostSignIn, hostSignUp, hostSignOut, watchAnswers, deleteAllAnswers, setHostKey, getHostKeyString, loadQuestions } from './sync.js';
+        // 更新直後に古い sync.js が残っていても回答表示は止めないよう、まとめて読み込む
+        import * as sync from './sync.js';
+        const { mode: syncMode, isDemo, onHostAuth, hostSignIn, hostSignUp, hostSignOut, watchAnswers, deleteAllAnswers, setHostKey, getHostKeyString } = sync;
+        const loadQuestions = () => sync.loadQuestions ? sync.loadQuestions() : Promise.reject(new Error('old'));
 
         const $ = (id) => document.getElementById(id);
         const TOTAL_STEPS = 8;
@@ -407,7 +410,7 @@
                         ${q.after ? `<div class="q-after">${esc(q.after)}</div>` : ''}
                     </div>`).join('');
             } catch (e) {
-                box.innerHTML = '<p class="note">設問一覧を読めませんでした。ホスト用の鍵が入っているか確認してください。</p>';
+                box.innerHTML = '<p class="note">設問一覧を読めませんでした。アプリを一度閉じて開き直し、それでもだめならホスト用の鍵が入っているか確認してください。</p>';
             }
         });
     </script>
