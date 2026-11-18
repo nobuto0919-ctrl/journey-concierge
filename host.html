@@ -94,6 +94,7 @@
         .log-time { color: var(--text-sub); font-size: 0.7rem; }
         .log-q { color: var(--text-sub); font-size: 0.75rem; margin-bottom: 6px; }
         .log-choice { font-weight: 500; }
+        .log-behind { margin-top: 6px; font-size: 0.82rem; color: var(--accent-gold, #d4af37); white-space: pre-wrap; word-break: break-word; }
         .log-memo { margin-top: 8px; padding: 8px 10px; border-left: 2px solid var(--accent-blue); background: rgba(0,0,0,0.15); border-radius: 0 8px 8px 0; white-space: pre-wrap; word-break: break-word; }
         .log-meta { margin-top: 8px; font-size: 0.65rem; color: var(--text-sub); }
         .empty { color: var(--text-sub); font-size: 0.8rem; text-align: center; padding: 20px 0; }
@@ -314,6 +315,7 @@
                         </div>
                         ${a.question ? `<div class="log-q">${esc(a.question)}</div>` : ''}
                         <div class="log-choice">→ ${esc(a.choice)}</div>
+                        ${a.behind ? `<div class="log-behind">行き先候補：${esc(a.behind)}</div>` : ''}
                         ${a.memo ? `<div class="log-memo">${esc(a.memo)}</div>` : ''}
                         <div class="log-meta">回答 ${fmt(a.clientTime)} ／ 受信 ${fmt(a.receivedAt)} ／ ${a.device === 'home-screen-app' ? 'ホーム画面アプリ' : 'ブラウザ'}</div>
                     </div>`).join('');
