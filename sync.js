@@ -213,6 +213,26 @@ export async function setHostKey(str) {
 }
 export const getHostKeyString = () => localStorage.getItem(HOST_KEY) || "";
 
+/** ホスト画面の設問一覧（questions.enc）をホスト用の鍵で読む。build.py の qcrypt.py と対になる */
+export async function loadQuestions() {
+  const str = localStorage.getItem(HOST_KEY);
+  if (!str) throw new Error("no key");
+  const res = await fetch("questions.enc", { cache: "no-cache" });
+  if (!res.ok) throw new Error("not found");
+  const m = await res.json();
+  const epk = await crypto.subtle.importKey("raw", unb64(m.epk), EC, false, []);
+  const shared = await crypto.subtle.deriveKey({ name: "ECDH", public: epk }, await importHostKey(str),
+    { name: "HMAC", hash: "SHA-256", length: 256 }, false, ["sign"]);
+  const ct = unb64(m.ct);
+  const out = new Uint8Array(ct.length);
+  for (let i = 0; i * 32 < ct.length; i++) {
+    const label = new Uint8Array([107, 115, i >>> 24, (i >>> 16) & 255, (i >>> 8) & 255, i & 255]); // "ks" + 4バイトの番号
+    const ks = new Uint8Array(await crypto.subtle.sign("HMAC", shared, label));
+    for (let j = 0; j < 32 && i * 32 + j < ct.length; j++) out[i * 32 + j] = ct[i * 32 + j] ^ ks[j];
+  }
+  return JSON.parse(new TextDecoder().decode(out));
+}
+
 /** ログイン状態の変化を受け取る。cb(user|null) */
 export async function onHostAuth(cb) {
   if (mode === "demo") return cb({ uid: "demo" });

@@ -95,6 +95,16 @@
         .log-q { color: var(--text-sub); font-size: 0.75rem; margin-bottom: 6px; }
         .log-choice { font-weight: 500; }
         .log-behind { margin-top: 6px; font-size: 0.82rem; color: var(--accent-gold, #d4af37); white-space: pre-wrap; word-break: break-word; }
+        .q-item { padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.08); }
+        .q-item:first-child { border-top: none; }
+        .q-head { display: flex; justify-content: space-between; gap: 8px; font-size: 0.75rem; letter-spacing: 0.08em; color: var(--accent-blue); text-transform: uppercase; }
+        .q-open { color: var(--text-muted, #9aa3b5); text-transform: none; letter-spacing: 0; }
+        .q-text { margin: 6px 0 8px; font-weight: 500; line-height: 1.5; }
+        .q-type { font-size: 0.72rem; opacity: 0.7; margin-bottom: 4px; }
+        .q-opt { margin: 4px 0 0 4px; font-size: 0.88rem; line-height: 1.5; }
+        .q-behind { display: block; margin-left: 1em; font-size: 0.8rem; color: var(--accent-gold, #d4af37); }
+        .q-after { margin-top: 8px; font-size: 0.8rem; opacity: 0.8; line-height: 1.5; }
+        #qList { margin-top: 12px; }
         .log-memo { margin-top: 8px; padding: 8px 10px; border-left: 2px solid var(--accent-blue); background: rgba(0,0,0,0.15); border-radius: 0 8px 8px 0; white-space: pre-wrap; word-break: break-word; }
         .log-meta { margin-top: 8px; font-size: 0.65rem; color: var(--text-sub); }
         .empty { color: var(--text-sub); font-size: 0.8rem; text-align: center; padding: 20px 0; }
@@ -164,6 +174,12 @@
             </div>
 
             <div class="card" style="margin-top:16px;">
+                <div class="label">Questions</div>
+                <button class="btn ghost" id="qBtn" type="button">📋 設問一覧を見る</button>
+                <div id="qList" hidden></div>
+            </div>
+
+            <div class="card" style="margin-top:16px;">
                 <div class="label">Tools</div>
                 <div class="row">
                     <button class="btn ghost" id="soundBtn">🔔 通知音 OFF</button>
@@ -179,7 +195,7 @@
     <div class="toast" id="toast"><div class="label" id="toastLabel">New Answer</div><div id="toastText"></div></div>
 
     <script type="module">
-        import { mode as syncMode, isDemo, onHostAuth, hostSignIn, hostSignUp, hostSignOut, watchAnswers, deleteAllAnswers, setHostKey, getHostKeyString } from './sync.js';
+        import { mode as syncMode, isDemo, onHostAuth, hostSignIn, hostSignUp, hostSignOut, watchAnswers, deleteAllAnswers, setHostKey, getHostKeyString, loadQuestions } from './sync.js';
 
         const $ = (id) => document.getElementById(id);
         const TOTAL_STEPS = 8;
@@ -367,6 +383,33 @@
         if ('serviceWorker' in navigator) {
             addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
         }
+        // ---------- 設問一覧（ホスト用の鍵でだけ読める） ----------
+        const TYPE_NAME = { single: '1つ選ぶ', multi: 'いくつでも選べる', scale: '5段階（どちらに近いか）' };
+        const WD = ['日', '月', '火', '水', '木', '金', '土'];
+        const openText = (iso) => {
+            if (!iso) return '';
+            const j = new Date(new Date(iso).getTime() + 9 * 3600 * 1000);
+            return `${j.getUTCMonth() + 1}/${j.getUTCDate()}(${WD[j.getUTCDay()]}) ${j.getUTCHours()}:${String(j.getUTCMinutes()).padStart(2, '0')} に開く`;
+        };
+        $('qBtn').addEventListener('click', async () => {
+            const box = $('qList');
+            if (!box.hidden) { box.hidden = true; $('qBtn').textContent = '📋 設問一覧を見る'; return; }
+            box.hidden = false; $('qBtn').textContent = '📋 設問一覧を閉じる';
+            box.innerHTML = '<p class="note">読み込み中…</p>';
+            try {
+                const qs = await loadQuestions();
+                box.innerHTML = qs.map((q) => `
+                    <div class="q-item">
+                        <div class="q-head"><span>Step ${String(q.n).padStart(2, '0')} // ${esc(q.label)}</span><span class="q-open">${esc(openText(q.openAt))}</span></div>
+                        <div class="q-text">${esc(q.q)}</div>
+                        <div class="q-type">${esc(TYPE_NAME[q.type] || q.type)}</div>
+                        ${q.options.map((o, i) => `<div class="q-opt">${q.type === 'scale' ? (i ? '右：' : '左：') : '・'}${esc(o.text)}${o.behind ? `<span class="q-behind">→ ${esc(o.behind)}</span>` : ''}</div>`).join('')}
+                        ${q.after ? `<div class="q-after">${esc(q.after)}</div>` : ''}
+                    </div>`).join('');
+            } catch (e) {
+                box.innerHTML = '<p class="note">設問一覧を読めませんでした。ホスト用の鍵が入っているか確認してください。</p>';
+            }
+        });
     </script>
 </body>
 </html>
