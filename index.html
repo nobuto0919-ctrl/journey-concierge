@@ -486,6 +486,22 @@
             padding: 4px 10px;
         }
 
+        /* 並び替え（気になる順） */
+        .option-btn.rank .option-radio { width: 24px; height: 24px; font-size: 0.75rem; font-weight: 600; color: var(--bg-color); }
+        .option-btn.rank.selected .option-radio { box-shadow: none; }
+        .step-card.done .option-btn.rank { opacity: 1; }
+        .visit { margin-top: 16px; }
+        .visit .reveal-box { margin-top: 0; }
+        .visit-btn { margin-top: 14px; padding: 12px 22px; border-radius: 999px; border: 1px solid var(--accent-blue); background: var(--accent-glow); color: var(--text-main); font-size: 0.9rem; cursor: pointer; }
+        .visit-done { margin-top: 10px; font-size: 0.8rem; color: var(--text-sub); line-height: 1.7; }
+        /* 行き先発表の演出 */
+        .thinking { text-align: center; padding: 22px 0 6px; font-size: 0.95rem; letter-spacing: 0.08em; color: var(--text-sub); animation: fadeIn 0.5s ease; }
+        .thinking .dots span { display: inline-block; animation: pulse 1.2s infinite; }
+        .thinking .dots span:nth-child(2) { animation-delay: 0.2s; }
+        .thinking .dots span:nth-child(3) { animation-delay: 0.4s; }
+        .thinking.found { color: var(--accent-blue); }
+        .reveal-box.focus { outline: none; animation: fadeIn 0.8s ease, glow 2.4s ease 0.4s 2; }
+        @keyframes glow { 50% { box-shadow: 0 0 28px var(--accent-blue); } }
         .step-note { margin: 4px 0 18px; text-align: center; font-size: 0.85rem; color: var(--text-sub); line-height: 1.6; }
         /* Journey Concept */
         .concept-card.sealed .concept-body { display: none; }
@@ -680,11 +696,11 @@
         <div class="step-card timeline-card sealed" id="timeline">
             <div class="step-number">Journey Timeline // 大まかな流れ</div>
             <div class="tl-body">
-                <div id="tlBasic"><div data-secret="1" data-enc="aU9OQ0lFUkdFQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHBgtIBw4XQVchMz5FUk9BTElUQ0lXUk89Ij1ZXQMMFVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZBwtFAAMPEBpYUBMJTgMHEB1HTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZHg5bXxweAgdFEQsEEBxTQR0JXxMMDgpMXVBfQldZTBweAgdbThQVAgFOAAUEARRYQRsCTh4NExNHXYvW6YDi/I7C5ozvyID+9IL161NBEBkEHFlZTAMHXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUkdFQ09SDwBbThQVAgFOAAUEARRYQRsCTh0MHwJHXYrj64zs/1tKEB8PDVdZARcEDU8NDwgWAVpHFwNDFAEEBkVbhfnehtDcldD/gO7JhuXykebdXxwDAgUJTIDR51yI+uuM5PSG4sGL6/6Nye2D9OpSTBoIEwsJXVNBEBkEHFlZTAMHXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUkdFQ09SDwBbThQVAgFOAAUEARRYQRsCTh0MHwJHXV5aWVpQTkgWEw4AXVUWAgYLQwwCAhoWT0URD0IZCwgRUFmA6/iG2OOG88CCxNSL6PyKzuZZTBweAgdbTkgJClFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lFUkdFXwMHXVUWAgYLQwwCAhoWT0URD0IaCgQAUFlUVlVfU1VKARcEDVFSEBkEHEcGDw4dEFRHBgtIFAcPF0tbkeT1gO3XgOjClcDehuT7jNXkTkgWEw4AXVVKHg5baU9OQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lFUlsJClFSEBkEHEcGDw4dEFRHBgtIFwYDBktbl+/VhPLuhtfpTkgWEw4AXVUWAgYLQwwCAhoWT0URD0IZCwgRUFmAzdCN4sKG8eaG4ciN4OqG8MiG4cuN4NpZXRQVAgFQX0YJG1lvQ09OQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lFTgsMXVMdEwgLUgQJAhwdXksRHkoRCgILQVeA1vtZTBweAgdbThQVAgFOAAUEARRYQRsCTh4NExNHXYrA3Irk1YTn5YzvwIrk/YTn6VNBEBkEHFlZTAMHXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUltKFgNQ"></div>
+                <div id="tlBasic"><div data-secret="1" data-enc="aU9OQ0lFUkdFQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHBgtIBw4XQVchMz5FUk9BTElUQ0lXUk89Ij1ZXQMMFVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZBwtFAAMPEBpYUBMJTgMHEB1HTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZHg5bXxweAgdFEQsEEBxTQR0JXxMMDgpMXVBfQldZTBweAgdbThQVAgFOAAUEARRYQRsCTh4NExNHXYvW6YDi/I7C5ozvyID+9IL161NBEBkEHFlZTAMHXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUkdFQ09SDwBbThQVAgFOAAUEARRYQRsCTh0MHwJHXYrj64zs/1tKEB8PDVdZARcEDU8NDwgWAVpHFwNDFAEEBkVbhfnehtDcldD/gO7JgOnikefigO7WXxoIEwsJXYja51qD6+WM9fyN4seA+vCN2OWI9OxZXRQIAgMCXVVKARcEDVFSTAUMTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZHg5bXxweAgdFEQsEEBxTQR0JXxMMDgpMXVhRSFRQX0AdEwgLTFsWEw4AQwoJExQWXk0aD0QSGgYRQVGN4+6G8uCC+tWN4s6C1dyA6PqB3+hZXRQVAgFQX0YJG1lvQ09OQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lFTgsMXVMdEwgLUgQJAhwdXksRHkoRCgILQVdUR11UU1NBEBkEHFlZEB8PDUkGHgYWEFJMFwVIBQ8EF01QgOr1keXcgO7JhM7el+zwjNPvX0YWAgYLXVNBDwBbeEdFQ09OQ0lFUkdFQ09OQ0lFUkdFQ09OQ1UJG1lZEB8PDUkGHgYWEFJMFwVIBg4IBk1QhuHVlfrlhtHiX0YWAgYLXVMdEwgLUgQJAhwdXksRHkoSCw4aQVeA3NiG4sSN4OiG8MCG4OyN4caG8MOG4NxSTBoVEwlbX0ACCldvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdFQ09OXwUMTFsWEw4AQwoJExQWXk0aD0QRGwoAQVGLx/VZXRQVAgFQXxoVEwlFAAMPEBpYUBMJThgGAh1HTILL3IzvxIrn9ITkwIzv7Irn+FtKEB8PDVdZXQsMXWVOQ0lFUkdFQ09OQ0lFUkdFQ09OQ1VKBwtb"></div>
                 </div>
                 <div id="tlFull" style="display: none;"><div data-secret="dest" data-enc="aU9OQ0lFUkdFQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHBgtIBw4XQVchMz5FUk9BTElUQ0lXUk89Ij1ZXQMMFVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZBwtFAAMPEBpYUBMJTgMHEB1HTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZHg5bXxweAgdFEQsEEBxTQR0JXxMMDgpMXVBfQldZTBweAgdbThQVAgFOAAUEARRYQRsCTh4NExNHXYvW6YDi/I7C5ozvyID+9IL161NBEBkEHFlZTAMHXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUkdFQ09SDwBbThQVAgFOAAUEARRYQRsCTh0MHwJHXYrj64zs/1tKEB8PDVdZARcEDU8NDwgWAVpHFwNDFAEEBkVbhfnehtDcldD/gO7JhuzOlO/dgO7WXxoIEwsJXYja51qD6+WM9fyN4seA+vCN2OWI9OxZXRQIAgMCXVVKARcEDVFSTAUMTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZHg5bXxweAgdFEQsEEBxTQR0JXxMMDgpMXVhRSFRQX0AdEwgLTFsWEw4AQwoJExQWXk0aD0QSGgYRQVGL5sKD+t+C+tWN4s6C1dyA6PqB3+hZXRQVAgFQX0YJG1lvQ09OQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lFTgsMXVMdEwgLUgQJAhwdXksRHkoRCgILQVdUR11UU1NBEBkEHFlZEB8PDUkGHgYWEFJMFwVIBQ8EF01QgOr1keXcgO7JhM7el+zwjNPvX0YWAgYLXVNBDwBbeEdFQ09OQ0lFUkdFQ09OQ0lFUkdFQ09OQ1UJG1lZEB8PDUkGHgYWEFJMFwVIBg4IBk1QhuHVlfrlhtHiX0YWAgYLXVMdEwgLUgQJAhwdXksRHkoSCw4aQVeDys6D0OaLzdaG88yG4O6N4c6G8eSG4cCN4c2G8dRZEAIPDwVblNLRi87NgOjOlfrlhfTRgOjtkebDgO/vhf7gkebLgO7BgOj9kebbgO3kX0YWHwYJD1FSTBoVEwlbX0ACCldvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdFQ09OXwUMTFsWEw4AQwoJExQWXk0aD0QRGwoAQVGLx/VZXRQVAgFQXxoVEwlFAAMPEBpYUBMJThgGAh1HTI7By4ro5ork2oHdyond6orn4IHf44r4yFVKARcEDVFSTAUMTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ1NBFgVb"></div>
                 </div>
-                <div id="tlDay2" style="display: none;"><div data-secret="5" data-enc="aU9OQ0lFUkdFQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHBgtIBw4XQVchMz5FUU9BTElUQ0lXUU89NidZXQMMFVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZBwtFAAMPEBpYUBMJTgMHEB1HTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZHg5bXxweAgdFEQsEEBxTQR0JXxMMDgpMXY/571tKEB8PDVdZARcEDU8NDwgWAVpHFwNDFAEEBkVbhfPzgOjxkebKgO39gOrekeTkgO3JgOrmkeXKgO3MgOvDkeTtX0AdEwgLTFtKDwZQaUlFUkdFQ09OQ0lFUkdFQ09OQ0lFUkdFQ1MCCldZARcEDU8NDwgWAVpHFwNDFwAIF0VbhffSX0YWAgYLXVMdEwgLUgQJAhwdXksRHkoSCw4aQVeA98yD69eN4seN0/CG4f2I9sqC3/FZEAIPDwVbkebvhffSgOrekebvhvPxhP3GkeTehsDqgOvvm+b2X0AdDggJHllZTBweAgdbTkgJClFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lFUkdFXwMHQwoJExQWXk0dBgoXFxNHXVMdEwgLUgQJAhwdXksRHkoRCgILQVdURV1VU1NBEBkEHFlZEB8PDUkGHgYWEFJMFwVIBQ8EF01QMCwmICIxX0AdEwgLTFtKDwZQaUlFUkdFQ09OQ0lFUkdFQ09OQ0lFUkdFQ1MCCldZARcEDU8NDwgWAVpHFwNDFwAIF0VbhsvyX0YWAgYLXVMdEwgLUgQJAhwdXksRHkoSCw4aQVeD5NeA2taJ1POG88CD/t6K2cWG899ZTBweAgdbTkgJClFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZXRIJXQ=="></div>
+                <div id="tlDay2" style="display: none;"><div data-secret="5" data-enc="aU9OQ0lFUkdFQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHBgtIBw4XQVchMz5FUU9BTElUQ0lXUU89NidZXQMMFVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZBwtFAAMPEBpYUBMJTgMHEB1HTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZHg5bXxweAgdFEQsEEBxTQR0JXxMMDgpMXY/571tKEB8PDVdZARcEDU8NDwgWAVpHFwNDFAEEBkVbhfPzgOjxkebKgO39gOrekebLgO39gOjWkeXvX0AdEwgLTFtKDwZQaUlFUkdFQ09OQ0lFUkdFQ09OQ0lFUkdFQ1MCCldZARcEDU8NDwgWAVpHFwNDFwAIF0VbUl1UU1lZXRQVAgFQXxoVEwlFAAMPEBpYUBMJThgGAh1HTITm4ozsxIrm8YTnzIzswYrn1ITm61NBEBkEHFlZTAMHXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUkdFQ09SDwBbThQVAgFOAAUEARRYQRsCTh0MHwJHXYn231VKARcEDVFSEBkEHEcGDw4dEFRHBgtIFAcPF0tbl+LOhefWgOjLmsbygO38hfzGlcrzXxwDAgUJTITk6Yn234rmyYTk6Yry/I7x0YTm2IrB54rn+I7k8FNBEAQEHgtbX0AdEwgLTFtKDwZQaUlFUkdFQ09OQ0lFUkdFQ09OQ0lFUkdFQ1MCCkkGHgYWEFJMEAwGAAIRQVFSEBkEHEcGDw4dEFRHBgtIFwYDBktbQ1BfU19STBoVEwlbXxweAgdFEQsEEBxTQR0JXxANAhtMXTogMTUgN1NBEBkEHFlZTAMHXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUkdFQ09SDwBbThQVAgFOAAUEARRYQRsCTh0MHwJHXYrK/1VKARcEDVFSEBkEHEcGDw4dEFRHBgtIFAcPF0tblPHVhtbXhN7/kebChfLfh9PJkebdX0AdEwgLTFtKDwZQaUlFUkdFQ09OQ0lFUkdFQ09OQ0lFTkgQD1E="></div>
                 </div>
             </div>
         </div>
@@ -722,7 +738,7 @@
         <!-- Step 3 -->
         <div class="step-card locked" id="step3" data-type="multi">
             <div class="step-number">Step 03 // Check-in</div>
-            <div data-secret="3" data-enc="aU9OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUBQRBh9DEhwAARMMDAFMXYrm84TnxIzt4Irn3YTnx4zt0Irk5YTk3Yzv9Irk7YjZ4ozv8Irk3ITk4Yzvy4rk3I7k7Yzv94rk5YHz2ozvzIbZ7VtKBwYYXWNFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0dFwwVXw8MDRtMXSQQHhMMEwMLQyoNHQ4GBk+M4/1FkebhgO7hgOjBkebCgO3siujdkebcgO7QgOj8TkgBChlQaUlFUkdFQ09OQ0lFUlsBChlOAAUEARRYQQAeFwAKHBRIBB0BFhlHTG1FQ09OQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHDB8aCgYLXwURDU8DFgURG0VFDAENDwAGGVpHFwAJBAUAPRcRCgAAS1pJUhMNChxHQVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0BEx0MHQlIEQ4KCgZHTFtKBwYYXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUlsWEw4AXYrk3ITn8Izv0Irn+ITk+ozs6FVKARcEDVFkQ0lFUkdFQ09OQ0lFUkdFQ1NBBwATTG1FQ09OQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHDB8aCgYLXwURDU8DFgURG0VFDAENDwAGGVpHFwAJBAUAPRcRCgAAS1pJUhMNChxHQVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0BEx0MHQlIEQ4KCgZHTFtKBwYYXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUlsWEw4AXY/w0YDI9Yzv9Irk1ITk3Izs6FVKARcEDVFkQ0lFUkdFQ09OQ0lFUkdFQ1NBBwATTG1FQ09OQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHDB8aCgYLXwURDU8DFgURG0VFDAENDwAGGVpHFwAJBAUAPRcRCgAAS1pJUhMNChxHQVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0BEx0MHQlIEQ4KCgZHTFtKBwYYXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUlsWEw4AXYrk+I7Hy4r/4Yrk2YLgxozs6FVKARcEDVFkQ0lFUkdFQ09OQ0lFUkdFQ1NBBwATTG1FQ09OQ0lFUkdFQ09STA0MBFlvQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHBgIdF0IHDRkQBkoSEQ4eEwwXUFlvQ09OQ0lFUkdFQ09OQ0lFUlsRBhcaAhsAE0cVDw4NBgEKHgMAEVJMgOvhkebGgO7IgOjakeb6gO7qgOj2kebNgO7igOjnkeXpgO7ejNXtltzehevhjNXsUEcMB1JMCgcVBxNWQVFSTB0AChMEEQoPXWNFUkdFQ09OQ0lFUkdZTAsHFVdvUkdFQ09OQ0lFUkdFXw0bFx0KHEcGDw4dEFRHARIHDgYaTgsRHEVFCgtTQQsRHFRHQwAAAAUMEQxYQRwbAQQMBjQRBh9GUEBHUgMMEA4MDwwBTIHU2YrA+Yrk5YTkxYnCworkyo7l0Yzs41VKEBIRFwAAXQ=="></div>
+            <div data-secret="3" data-enc="aU9OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUBQRBh9DEhwAARMMDAFMXYrm84TnxIzt4Irn3YTnx4zt0Irk5YTk3Yzv9Irk7YjZ4ozv8Irk3ITk4Yzvy4rk3I7k7Yzv94rk5YHz2ozvzIbZ7VtKBwYYXWNFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0dFwwVXw8MDRtMXSQQHhMMEwMLQyoNHQ4GBk+M4/1FkebhgO7hgOjBkebCgO3siujdkebcgO7QgOj8TkgBChlQaUlFUkdFQ09OQ0lFUlsBChlOAAUEARRYQRwaBhlIHAgRBk1Qhs35kebxiszBgOjKQ1CD+u1dU4zt9ITk6Izs6ork0oTn64DS4lVKFg4TXWVOQ0lFUkdFQ09OQ0lZFg4TQwwCAhoWT0UKExsHDAcWXwAXDBoeQVdvUkdFQ09OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUAgVFwYBDUQHBglFDhoCFwBHUggLAAMHAAJYUBMKBAgCBiYVBg4KDUddT0kRGg4WSk1QaUlFUkdFQ09OQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHDB8aCgYLXxUEBwYBQVdZXQMMFVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZARcEDVGN4seG8PSG4tyN4eOG8/6G4eRSTBoVEwlbaU9OQ0lFUkdFQ09OQ0lFUkdZTAsHFVdvUkdFQ09OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUAgVFwYBDUQHBglFDhoCFwBHUggLAAMHAAJYUBMKBAgCBiYVBg4KDUddT0kRGg4WSk1QaUlFUkdFQ09OQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHDB8aCgYLXxUEBwYBQVdZXQMMFVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZARcEDVGI9sqC3/GG4viN4s+G89iG4eRSTBoVEwlbaU9OQ0lFUkdFQ09OQ0lFUkdZTAsHFVdvUkdFQ09OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUAgVFwYBDUQHBglFDhoCFwBHUggLAAMHAAJYUBMKBAgCBiYVBg4KDUddT0kRGg4WSk1QaUlFUkdFQ09OQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHDB8aCgYLXxUEBwYBQVdZXQMMFVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZARcEDVGN4uOM0M+A8u2N4sKA98KG4eRSTBoVEwlbaU9OQ0lFUkdFQ09OQ0lFUkdZTAsHFVdvUkdFQ09OQ0lFUkdFX0AKCh9beEdFQ09OQ0lFUkdFQ1MKCh9FEQsEEBxTQR0AChNICgEeFh1IBRUEEx8LEUtbeEdFQ09OQ0lFUkdFQ09OQ0lZBgIdFw4cBghFAgsEAAoGDAUBFxVYQYzs54rk0YTkxYzv3Irk7YTk54zv8Irk2oTk74zv4Yrn/oTk04DS643eyYHh7IDS6ktFGwNYQQYAExwRQUVbX0AaBhERExUAAlFkQ0lFUkdFQ09OQ0lFTkgBChlQaUlFUkdFQ09OQ0lFUlsHFhsaDAdFEQsEEBxTQRoQEAoMF0IMFwdHUg4BXk0MFwdWUEcKDQwCCgoOT0UWFg0DCh02BgIVS1xHQUkBGxQEAQMLB1eDw92AzfWN4v6G88GDz86N4tGM8tWG4e9STAsQBhMKDVE="></div>
         </div>
 
         <!-- Step 4 -->
@@ -738,15 +754,27 @@
         </div>
 
         <!-- Step 6 -->
-        <div class="step-card locked" id="step6" data-type="scale">
-            <div class="step-number">Step 06 // Lunch</div>
-            <div data-secret="6" data-enc="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"></div>
+        <div class="step-card locked" id="step6" data-type="multi">
+            <div class="step-number">Step 06 // Check-out</div>
+            <div data-secret="6" data-enc="aU9OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUBQRBh9DEhwAARMMDAFMXYrm84TnxIzt4Irn3YTnwYzsxYrm+oTkzF5chfDnkebCgO73gOnnQ1WD+u2N4teG88CG4saN4u+G8OOG4syN4s+M8+mG4vuN4vCKzvhZTAsHFVdvUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMEB0AAkoNCgEaQVcoBwsRCh8CBkkmGggMAApOgenxUoTk54zv7Irk1oTkxIzs4YDkyoTk2ozv3Yrk61tKBwYYXWNFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0BEx0MHQkWTggcDBwVUFlvQ09OQ0lFUkdFQ09OQ0lFUlsBChlOAAUEARRYQQAeFwAKHEoHFwFODhwJBg5HQwAAAAUMEQxYQRsBBA4JFygVFwYBDUFTXkcRCwYdSktbeEdFQ09OQ0lFUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMDBkRGwgLTh0PBwAKUFlZTAsHFVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZEB8PDVeG8+2MwceL8uuG88yA5sqN4eOG88yNwuON4uZZXRQVAgFQaUlFUkdFQ09OQ0lFUkdFQ09STA0MBFlvQ09OQ0lFUkdFQ09OQ0lFUlsBChlOAAUEARRYQQAeFwAKHEoHFwFODhwJBg5HQwAAAAUMEQxYQRsBBA4JFygVFwYBDUFTXkcRCwYdSktbeEdFQ09OQ0lFUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMDBkRGwgLTh0PBwAKUFlZTAsHFVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZEB8PDVeM1s+A5eqN4fuG8+2D9syIzsBZXRQVAgFQaUlFUkdFQ09OQ0lFUkdFQ09STA0MBFlvQ09OQ0lFUkdFQ09OQ0lFUlsBChlOAAUEARRYQQAeFwAKHEoHFwFODhwJBg5HQwAAAAUMEQxYQRsBBA4JFygVFwYBDUFTXkcRCwYdSktbeEdFQ09OQ0lFUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMDBkRGwgLTh0PBwAKUFlZTAsHFVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZEB8PDVeM8c+A0uSN4s6G8NOG4MKN4d2G8cpZTBweAgdbeEdFQ09OQ0lFUkdFQ09OQ0lZXQMMFVFkQ0lFUkdFQ09OQ0lFTkgBChlQaUlFUkdFQ09OQ0lFUlsBChlOAAUEARRYQRsLGx1IGwkVFhtDFBsEAhcAEU1QaUlFUkdFQ09OQ0lFUkdFQ09SFwwdBgYXBg5OEwUEEQINDAMKBhtYUITn54zs6Yrk7YTk54zv8Irk2oTk74zv4Yrn/oTk04DS643eyYHh7IDS6ktFGwNYQQYAExwRREVbX0AaBhERExUAAlFkQ0lFUkdFQ09OQ0lFTkgBChlQaUlFUkdFQ09OQ0lFUlsHFhsaDAdFEQsEEBxTQRoQEAoMF0IMFwdHUg4BXk0MFwdTUEcKDQwCCgoOT0UWFg0DCh02BgIVS1lHQUkBGxQEAQMLB1eDw92AzfWN4v6G88GDz86N4tGM8tWG4e9STAsQBhMKDVE="></div>
         </div>
 
         <!-- Step 7 -->
-        <div class="step-card locked" id="step7" data-type="multi">
-            <div class="step-number">Step 07 // Afternoon</div>
-            <div data-secret="7" data-enc="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"></div>
+        <div class="step-card locked" id="step7" data-type="scale">
+            <div class="step-number">Step 07 // Lunch</div>
+            <div data-secret="7" data-enc="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"></div>
+        </div>
+
+        <!-- Step 8 -->
+        <div class="step-card locked" id="step8" data-type="rank">
+            <div class="step-number">Step 08 // Afternoon</div>
+            <div data-secret="8" data-enc="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"></div>
+        </div>
+
+        <!-- Step 9 -->
+        <div class="step-card locked" id="step9" data-type="scale">
+            <div class="step-number">Step 09 // Dinner</div>
+            <div data-secret="9" data-enc="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"></div>
         </div>
         <!-- STEPS:END -->
     </div>
@@ -766,7 +794,7 @@
         const openAt = (step) => STEP_OPEN_AT && STEP_OPEN_AT[step] ? new Date(STEP_OPEN_AT[step]) : null;
         const isOpen = (step) => { const t = openAt(step); return !t || now() >= t; };
 
-        const TOTAL_STEPS = 7;
+        const TOTAL_STEPS = 9;
         // ?now= 付きで開くと「プレビューモード」：回答は送信せず、本番とは別の場所に保存する
         const isPreview = !!nowOverride;
         const STATE_KEY = isPreview ? 'ajc-state-preview' : 'ajc-state';
@@ -845,6 +873,24 @@
             $(`btn${step}`).disabled = selections[step].length === 0;
         };
 
+        window.rankOption = (step, element) => {
+            if (state.done[step]) return;
+            const i = optionsOf(step).indexOf(element);
+            const order = (selections[step] || []).slice();
+            const at = order.indexOf(i);
+            if (at >= 0) order.splice(at, 1); else order.push(i);
+            selections[step] = order;
+            paintRank(step, order);
+            $(`btn${step}`).disabled = order.length !== optionsOf(step).length;
+        };
+        function paintRank(step, order) {
+            optionsOf(step).forEach((b, i) => {
+                const r = order.indexOf(i);
+                b.classList.toggle('selected', r >= 0);
+                b.querySelector('.option-radio').textContent = r >= 0 ? r + 1 : '';
+            });
+        }
+
         function scaleText(step, v) {
             const sc = cardOf(step).querySelector('.scale');
             const L = sc.dataset.left, R = sc.dataset.right;
@@ -869,6 +915,7 @@
             if (type === 'scale') return `${scaleText(step, value)}（${value}/5）`;
             const texts = optionsOf(step).map(b => b.querySelector('span').textContent.trim());
             if (type === 'multi') return value.map(i => texts[i]).join('・');
+            if (type === 'rank') return value.map((i, r) => `${r + 1}. ${texts[i]}`).join(' → ');
             return texts[value];
         }
         // 選択肢の裏にある候補（彼女の画面には出さず、回答と一緒にホストへ送る）
@@ -882,11 +929,13 @@
             }
             const opts = optionsOf(step);
             const idx = Array.isArray(value) ? value : [value];
+            if (card.dataset.type === 'rank') return idx.map((i, r) => `${r + 1}. ${opts[i]?.dataset.behind}`).join('\n');
             return idx.map(i => opts[i]?.dataset.behind).filter(Boolean).join(' ／ ');
         }
         function paintSelection(step, value) {
             const type = cardOf(step).dataset.type;
             if (type === 'scale') return paintScale(step, value);
+            if (type === 'rank') return paintRank(step, value);
             const idx = Array.isArray(value) ? value : [value];
             optionsOf(step).forEach((b, i) => b.classList.toggle('selected', idx.includes(i)));
         }
@@ -900,6 +949,31 @@
             $(`input${step}`).disabled = true;
 
             const reveal = $(`reveal${step}`);
+            if (card.dataset.type === 'rank') renderVisit(step, animate);
+
+            // 行き先の発表：思考中… → 合致する場所を発見 → 発表のボックスへフォーカス
+            if (reveal && animate && reveal.contains($('destSealed'))) {
+                revealing = true;
+                applySeals();
+                const think = document.createElement('div');
+                think.className = 'thinking';
+                think.innerHTML = '思考中<span class="dots"><span>.</span><span>.</span><span>.</span></span>';
+                reveal.before(think);
+                setTimeout(() => think.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+                setTimeout(() => { think.className = 'thinking found'; think.textContent = 'あなたの希望に合致する場所を発見しました'; }, 2600);
+                setTimeout(() => {
+                    think.remove();
+                    revealing = false;
+                    reveal.style.display = 'block';
+                    applySeals();
+                    const box = destIsOpen() ? $('destOpen') : $('destSealed');
+                    box.classList.add('focus');
+                    box.tabIndex = -1;
+                    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    box.focus({ preventScroll: true });
+                }, 4400);
+                return;
+            }
             if (reveal) reveal.style.display = 'block';
 
             const nextCard = $(`step${step + 1}`);
@@ -948,6 +1022,7 @@
             });
         }
 
+        let revealing = false; // 行き先発表の演出中は、流れの地名をまだ出さない
         function applySeals() {
             unlockSecrets();
             // 行き先：公開日時までは CLASSIFIED、過ぎたら行き先を表示
@@ -958,7 +1033,7 @@
             // 流れ：Step 1 の時刻に開き、行き先を発表したら（Step 2 回答後）地名入りに切り替える
             $('timeline').classList.toggle('sealed', !isOpen(1));
             $('concept').classList.toggle('sealed', !isOpen(1));
-            const full = destOpen && !!state.done[1]; // Step 1 が行き先の質問
+            const full = destOpen && !!state.done[1] && !revealing; // Step 1 が行き先の質問
             $('tlBasic').style.display = full ? 'none' : 'block';
             $('tlFull').style.display = full ? 'block' : 'none';
             $('tlDay2').style.display = isOpen(5) ? 'block' : 'none'; // 2日目の朝の Step と同じ時刻
@@ -974,6 +1049,41 @@
         }
         setInterval(applySeals, 30000);
         document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && applySeals());
+
+        // 並び替えの Step：1番の場所から順に案内し、「行きました！」で次の場所へ
+        function renderVisit(step, animate) {
+            let box = $(`visit${step}`);
+            if (!box) {
+                box = document.createElement('div');
+                box.className = 'visit';
+                box.id = `visit${step}`;
+                $(`btn${step}`).after(box);
+            }
+            const order = state.done[step].value;
+            const opts = optionsOf(step);
+            state.visit = state.visit || {};
+            const k = state.visit[step] || 0;
+            const went = order.slice(0, k).map(i => opts[i].dataset.place);
+            const log = went.length ? `<div class="visit-done">行った場所：${went.join(' → ')}</div>` : '';
+            if (k >= order.length) {
+                box.innerHTML = `<div class="reveal-box"><div class="reveal-label">All Spots Visited</div>
+                    <div class="reveal-destination">Complete!</div>
+                    <div class="reveal-desc">ぜんぶまわりました。素敵な寄り道をありがとう。</div>${log}</div>`;
+            } else {
+                box.innerHTML = `<div class="reveal-box"><div class="reveal-label">Next Spot // ${k + 1} of ${order.length}</div>
+                    <div class="reveal-destination" style="font-size:1.6rem">${opts[order[k]].dataset.place}</div>
+                    <div class="reveal-desc">${opts[order[k]].querySelector('span').textContent.trim()}</div>
+                    <button type="button" class="visit-btn" onclick="visited(${step})">行きました！</button>${log}</div>`;
+            }
+            if (animate) setTimeout(() => box.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+        }
+        window.visited = (step) => {
+            state.visit = state.visit || {};
+            state.visit[step] = (state.visit[step] || 0) + 1;
+            save();
+            if (navigator.vibrate) navigator.vibrate(15);
+            renderVisit(step, true);
+        };
 
         window.submitStep = (step) => {
             const value = selections[step];
@@ -1032,11 +1142,12 @@
             const stops = [
                 ['前日', '2026-11-20T21:00'],
                 ['1日目 9:00', '2026-11-21T09:05'],
-                ['14:30', '2026-11-21T14:35'],
+                ['15:00', '2026-11-21T15:05'],
                 ['19:00', '2026-11-21T19:05'],
                 ['2日目 6:00', '2026-11-22T06:05'],
-                ['9:30', '2026-11-22T09:35'],
+                ['12:00', '2026-11-22T12:05'],
                 ['14:00', '2026-11-22T14:05'],
+                ['16:00', '2026-11-22T16:05'],
             ];
             const t = now();
             const j = new Date(t.getTime() + 9 * 3600 * 1000);
