@@ -1009,9 +1009,11 @@
             if (reveal) reveal.style.display = 'block';
 
             applySeals();
+            const match = card.dataset.type !== 'rank' && renderMatch(step);
             if (!animate) return;
             // カード形式：送信したら次のカードへ（演出や案内があるカードは「次へ」で進む）
             if (reveal) setTimeout(() => reveal.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+            else if (match) setTimeout(() => match.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
             else if (card.dataset.type !== 'rank' && $(`step${step + 1}`)) setTimeout(() => deckGo(DECK.indexOf(`step${step + 1}`)), 700);
             deckNav();
         }
@@ -1127,6 +1129,27 @@
         }
         setInterval(() => { applySeals(); deckNav(); }, 30000);
         document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && (applySeals(), deckNav()));
+
+        // 選んだ答えに合う場所（選択肢の裏の候補）があれば、送信後にカードの中で見せる
+        function renderMatch(step) {
+            const d = state.done[step];
+            const text = d && behindText(step, d.value ?? d.choiceIndex);
+            if (!text) return null;
+            let box = $(`match${step}`);
+            if (!box) {
+                box = document.createElement('div');
+                box.className = 'visit';
+                box.id = `match${step}`;
+                $(`btn${step}`).after(box);
+            }
+            const spots = text.split(' ／ ').map((t) => t.split('（')[0]);
+            const place = [...new Set(spots.map((t) => t.split('：')[0]))].join(' ／ ');
+            const desc = spots.map((t) => t.split('：')[1]).filter(Boolean).join('<br>または ');
+            box.innerHTML = `<div class="reveal-box"><div class="reveal-label">Matched Spot // あなたの答えにぴったりの場所</div>
+                <div class="reveal-destination" style="font-size:1.6rem">${place}</div>
+                ${desc ? `<div class="reveal-desc">${desc}</div>` : ''}</div>`;
+            return box;
+        }
 
         // 並び替えの Step：1番の場所から順に案内し、「行きました！」で次の場所へ
         function renderVisit(step, animate) {
