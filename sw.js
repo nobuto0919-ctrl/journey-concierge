@@ -2,7 +2,7 @@
 // - 自分のファイル：まずネットから最新を取り、ダメならキャッシュ（電波がなくても開ける）
 // - フォント・Firebase SDK：キャッシュ優先（バージョン固定なので変わらない）
 // ファイルを更新したら VERSION を上げると、古いキャッシュが消えます。
-const VERSION = "ajc-v28";
+const VERSION = "ajc-v29";
 const PRECACHE = [
   "./",
   "./index.html",
