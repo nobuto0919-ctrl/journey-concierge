@@ -502,6 +502,18 @@
         .thinking.found { color: var(--accent-blue); }
         .reveal-box.focus { outline: none; animation: fadeIn 0.8s ease, glow 2.4s ease 0.4s 2; }
         @keyframes glow { 50% { box-shadow: 0 0 28px var(--accent-blue); } }
+        /* カード形式 */
+        .deck-mode .step-card:not(.current) { display: none; }
+        .step-card.deck-in { animation: deckIn 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes deckIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+        .deck-nav { display: none; }
+        .deck-mode .deck-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; }
+        .deck-nav button { padding: 11px 18px; border-radius: 999px; border: 1px solid var(--accent-blue); background: var(--accent-glow); color: var(--text-main); font-size: 0.85rem; cursor: pointer; }
+        .deck-nav button:disabled { opacity: 0.25; cursor: default; border-color: var(--card-border); background: transparent; }
+        .deck-dots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+        .deck-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--card-border); }
+        .deck-dots span.past { background: var(--text-sub); }
+        .deck-dots span.on { background: var(--accent-blue); box-shadow: 0 0 8px var(--accent-blue); }
         .step-note { margin: 4px 0 18px; text-align: center; font-size: 0.85rem; color: var(--text-sub); line-height: 1.6; }
         /* Journey Concept */
         .concept-card.sealed .concept-body { display: none; }
@@ -777,6 +789,11 @@
             <div data-secret="9" data-enc="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"></div>
         </div>
         <!-- STEPS:END -->
+        <div class="deck-nav" id="deckNav">
+            <button type="button" id="deckPrev" onclick="deckStep(-1)">← 戻る</button>
+            <div class="deck-dots" id="deckDots"></div>
+            <button type="button" id="deckNext" onclick="deckStep(1)">次へ →</button>
+        </div>
     </div>
 
     <!-- 未送信があるときだけ表示 -->
@@ -966,6 +983,7 @@
                     revealing = false;
                     reveal.style.display = 'block';
                     applySeals();
+                    deckNav();
                     const box = destIsOpen() ? $('destOpen') : $('destSealed');
                     box.classList.add('focus');
                     box.tabIndex = -1;
@@ -976,13 +994,45 @@
             }
             if (reveal) reveal.style.display = 'block';
 
-            const nextCard = $(`step${step + 1}`);
             applySeals();
-            if (nextCard && isOpen(step + 1)) {
-                if (animate) setTimeout(() => nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' }), reveal ? 900 : 150);
-            } else if (animate && reveal) {
-                setTimeout(() => reveal.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+            if (!animate) return;
+            // カード形式：送信したら次のカードへ（演出や案内があるカードは「次へ」で進む）
+            if (reveal) setTimeout(() => reveal.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+            else if (card.dataset.type !== 'rank' && $(`step${step + 1}`)) setTimeout(() => deckGo(deckIndex + 1), 700);
+            deckNav();
+        }
+
+        // ---------- カード形式（1枚ずつ表示して「次へ」で進む） ----------
+        const DECK = ['timeline', 'concept', ...Array.from({ length: TOTAL_STEPS }, (_, i) => `step${i + 1}`)];
+        let deckIndex = 0;
+        function deckCanNext(i) {
+            if (i >= DECK.length - 1) return false;
+            const id = DECK[i];
+            if (!id.startsWith('step')) return isOpen(1);
+            return !!state.done[Number(id.slice(4))];
+        }
+        function deckNav() {
+            $('deckPrev').disabled = deckIndex === 0;
+            $('deckNext').disabled = !deckCanNext(deckIndex);
+            $('deckDots').innerHTML = DECK.map((_, i) =>
+                `<span class="${i === deckIndex ? 'on' : i < deckIndex || deckCanNext(i) ? 'past' : ''}"></span>`).join('');
+        }
+        function deckGo(i, instant) {
+            deckIndex = Math.max(0, Math.min(DECK.length - 1, i));
+            DECK.forEach((id, k) => $(id).classList.toggle('current', k === deckIndex));
+            if (deckIndex >= 2) { state.seenIntro = true; save(); }
+            deckNav();
+            if (!instant) {
+                const card = $(DECK[deckIndex]);
+                card.classList.remove('deck-in'); void card.offsetWidth; card.classList.add('deck-in');
+                window.scrollTo({ top: Math.max(0, card.getBoundingClientRect().top + scrollY - 16), behavior: 'smooth' });
             }
+        }
+        window.deckStep = (d) => deckGo(deckIndex + d);
+        function deckStart() {
+            if (!isOpen(1) || !state.seenIntro) return 0; // 最初は「大まかな流れ」から
+            for (let s = 1; s <= TOTAL_STEPS; s++) if (!state.done[s]) return s + 1;
+            return DECK.length - 1;
         }
 
         // ---------- Sealed（公開日時まで中身を隠す） ----------
@@ -1047,8 +1097,8 @@
                 else if (!state.done[s]) card.classList.add('locked');
             }
         }
-        setInterval(applySeals, 30000);
-        document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && applySeals());
+        setInterval(() => { applySeals(); deckNav(); }, 30000);
+        document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && (applySeals(), deckNav()));
 
         // 並び替えの Step：1番の場所から順に案内し、「行きました！」で次の場所へ
         function renderVisit(step, animate) {
@@ -1131,6 +1181,8 @@
         applySeals();
         restore();
         applySeals();
+        document.body.classList.add('deck-mode');
+        deckGo(deckStart(), true);
         if (isPreview) showPreviewBar();
         else {
             updatePill(pendingCount());
