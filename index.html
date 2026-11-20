@@ -1211,7 +1211,7 @@
             6: { r: 'Q', s: '♥' },
             9: { r: 'K', s: '♥' },
         };
-        const HAND = [1, 4, 6, 9]; // ♥10・J・Q・K。最後の1枚（♥A）はディナーの席で
+        const HAND = [1, 4, 6, 9]; // ♥10・J・Q・K。最後の1枚（♥A）は本物のカードで渡す
         function cardHTML(c) {
             if (!c) return '<div class="pcard empty"><div class="mid">?</div></div>';
             if (c.joker) return '<div class="pcard joker"><div class="mid"><span>🃏</span><span>JOKER</span></div></div>';
@@ -1260,7 +1260,7 @@
             const cards = HAND.map((n) => drawn[n] ? cardHTML(DRAWS[n]) : '<div class="pcard back"></div>').join('');
             const joker = Object.entries(DRAWS).filter(([n, c]) => c.joker && drawn[n]).map(([, c]) => cardHTML(c)).join('');
             $('handCards').innerHTML = cards + cardHTML(null) + joker
-                + '<div class="hand-note">最後の1枚は、<br>ディナーの席で。</div>';
+                + '<div class="hand-note">最後の1枚は、<br>とっておきの場面で。</div>';
         }
 
         // ---------- 旅の1冊（締めくくりで、ひとことを本にして読む） ----------
