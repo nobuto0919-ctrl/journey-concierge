@@ -95,6 +95,11 @@
         .log-q { color: var(--text-sub); font-size: 0.75rem; margin-bottom: 6px; }
         .log-choice { font-weight: 500; }
         .log-behind { margin-top: 6px; font-size: 0.82rem; color: var(--accent-gold, #d4af37); white-space: pre-wrap; word-break: break-word; }
+        .gp-times { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
+        .gp-times button { flex: 1 0 auto; padding: 7px 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: inherit; font-size: 0.78rem; cursor: pointer; }
+        .gp-times button.on { background: var(--accent-blue); color: #0b0f19; border-color: var(--accent-blue); }
+        .gp-frame { border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; overflow: hidden; height: 70vh; min-height: 520px; background: #0b0f19; }
+        .gp-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
         .q-item { padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.08); }
         .q-item:first-child { border-top: none; }
         .q-head { display: flex; justify-content: space-between; gap: 8px; font-size: 0.75rem; letter-spacing: 0.08em; color: var(--accent-blue); text-transform: uppercase; }
@@ -171,6 +176,20 @@
             <div class="card" style="margin-top:16px;">
                 <div class="label">Answer Log (<span id="count">0</span>)</div>
                 <div id="log"><p class="empty">まだ回答はありません。</p></div>
+            </div>
+
+            <div class="card" style="margin-top:16px;">
+                <div class="label">Guest Preview</div>
+                <p class="note">彼女の画面が、時刻ごとにどう見えるかを確認できます。ここで答えても送信されず、彼女のアプリにも影響しません。</p>
+                <button class="btn ghost" id="gpBtn" type="button" style="margin-top:10px;">📱 ゲスト画面のプレビューを開く</button>
+                <div id="gpBox" hidden>
+                    <div class="gp-times" id="gpTimes"></div>
+                    <div class="gp-frame"><iframe id="gpFrame" title="ゲスト画面のプレビュー"></iframe></div>
+                    <div class="row" style="margin-top:10px;">
+                        <button class="btn ghost" id="gpReset" type="button">↺ 回答を消して最初から</button>
+                        <a class="btn ghost" id="gpOpen" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;">全画面で開く</a>
+                    </div>
+                </div>
             </div>
 
             <div class="card" style="margin-top:16px;">
@@ -413,6 +432,27 @@
                 box.innerHTML = '<p class="note">設問一覧を読めませんでした。アプリを一度閉じて開き直し、それでもだめならホスト用の鍵が入っているか確認してください。</p>';
             }
         });
+        // ---------- ゲスト画面のプレビュー（?now= の時刻で表示。送信はされない） ----------
+        const GP_TIMES = [
+            ['前日', '2026-11-20T20:00'], ['1日目 9:00', '2026-11-21T09:05'], ['14:30', '2026-11-21T14:35'],
+            ['19:00', '2026-11-21T19:05'], ['2日目 6:00', '2026-11-22T06:05'], ['9:30', '2026-11-22T09:35'], ['14:00', '2026-11-22T14:05'],
+        ];
+        let gpNow = GP_TIMES[1][1];
+        const gpUrl = (reset) => `index.html?now=${gpNow}${reset ? '&reset=1' : ''}`;
+        function gpShow(reset) {
+            $('gpFrame').src = gpUrl(reset);
+            $('gpOpen').href = gpUrl(false);
+            [...$('gpTimes').children].forEach((b) => b.classList.toggle('on', b.dataset.t === gpNow));
+        }
+        $('gpTimes').innerHTML = GP_TIMES.map(([l, t]) => `<button type="button" data-t="${t}">${l}</button>`).join('');
+        $('gpTimes').addEventListener('click', (e) => { const t = e.target.dataset.t; if (t) { gpNow = t; gpShow(false); } });
+        $('gpBtn').addEventListener('click', () => {
+            const box = $('gpBox');
+            box.hidden = !box.hidden;
+            $('gpBtn').textContent = box.hidden ? '📱 ゲスト画面のプレビューを開く' : '📱 ゲスト画面のプレビューを閉じる';
+            if (!box.hidden && !$('gpFrame').src) gpShow(false);
+        });
+        $('gpReset').addEventListener('click', () => gpShow(true));
     </script>
 </body>
 </html>
