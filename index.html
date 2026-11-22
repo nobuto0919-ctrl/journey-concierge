@@ -621,6 +621,8 @@
         .polaroid.add { position: relative; flex-direction: column; gap: 8px; cursor: pointer; border: 2px dashed #c9b48f; }
         .polaroid.add span { font-size: 0.85rem; color: #8a5a1f; font-family: inherit; }
         .polaroid.add input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .book-pdf { display: block; width: 100%; margin-top: 12px; padding: 12px; border-radius: 999px; border: 1px solid #c9b48f; background: #fbf7ee; color: #6b5f4d; font-size: 0.9rem; cursor: pointer; }
+        .book-pdf:disabled { opacity: 0.6; }
         .book-photo-change { position: relative; display: block; text-align: center; font-size: 0.75rem; color: #9a8b74; margin: -8px 0 12px; cursor: pointer; }
         .book-photo-change input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
         .deck-mode .deck-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; }
@@ -1437,7 +1439,7 @@
         }
         let bookAt = 0, bookCache = null;
         window.openBook = async (i, fresh) => {
-            if (fresh || !bookCache) bookCache = await bookPages();
+            if (fresh || !bookCache) { bookCache = await bookPages(); pdfFile = null; }
             const pages = bookCache;
             bookAt = Math.max(0, Math.min(pages.length - 1, i));
             let el = $('book');
@@ -1452,9 +1454,174 @@
                 <div style="width:min(420px,100%)">${pages[bookAt]}
                 <div class="book-nav"><button onclick="openBook(${bookAt - 1})" ${bookAt === 0 ? 'disabled' : ''}>← 前のページ</button>
                 <span style="color:#c9b48f;font-size:0.8rem">${bookAt + 1} / ${pages.length}</span>
-                <button onclick="openBook(${bookAt + 1})" ${bookAt === pages.length - 1 ? 'disabled' : ''}>次のページ →</button></div></div>`;
+                <button onclick="openBook(${bookAt + 1})" ${bookAt === pages.length - 1 ? 'disabled' : ''}>次のページ →</button></div>
+                <button type="button" class="book-pdf" id="bookPdf" onclick="bookPdfShare()">${pdfFile ? '📤 PDFを共有する' : '📄 PDFで保存・共有'}</button></div>`;
         };
         window.closeBook = () => { $('book').hidden = true; };
+
+        // ---------- ふたりの1冊を PDF にして、iPhone の共有メニューで保存・送信 ----------
+        // （共有はタップの直後でないと iPhone が止めるので、「作る」と「共有する」の2回タップにしている）
+        let pdfFile = null;
+        const PDF_NAME = 'りお生誕祭2026';
+        const PW = 840, PH = 1200, SERIF = '"Hiragino Mincho ProN", "Yu Mincho", serif';
+        function pdfCanvas() {
+            const c = document.createElement('canvas');
+            c.width = PW; c.height = PH;
+            const g = c.getContext('2d');
+            g.fillStyle = '#fbf7ee'; g.fillRect(0, 0, PW, PH);
+            g.textBaseline = 'top';
+            return [c, g];
+        }
+        function wrapText(g, text, x, y, maxW, lh, maxLines = 99) {
+            let lines = [], line = '';
+            for (const ch of [...text]) {
+                if (ch === '\n') { lines.push(line); line = ''; continue; }
+                if (g.measureText(line + ch).width > maxW) { lines.push(line); line = ch; } else line += ch;
+            }
+            if (line) lines.push(line);
+            lines = lines.slice(0, maxLines);
+            lines.forEach((l, i) => g.fillText(l, x, y + i * lh));
+            return y + lines.length * lh;
+        }
+        async function loadImg(blob) {
+            const im = new Image();
+            im.src = URL.createObjectURL(blob);
+            await im.decode();
+            return im;
+        }
+        function drawCover(g, im, x, y, w, h) {
+            const r = Math.max(w / im.naturalWidth, h / im.naturalHeight), sw = w / r, sh = h / r;
+            g.drawImage(im, (im.naturalWidth - sw) / 2, (im.naturalHeight - sh) / 2, sw, sh, x, y, w, h);
+        }
+        const shadow = (g, on) => { g.shadowColor = on ? 'rgba(60,40,10,0.25)' : 'transparent'; g.shadowBlur = on ? 24 : 0; g.shadowOffsetY = on ? 10 : 0; };
+        async function toJpeg(c) {
+            const b = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.85));
+            return { bytes: new Uint8Array(await b.arrayBuffer()), w: c.width, h: c.height };
+        }
+        const stampLine = (all) => Object.keys(STAMPS).filter((n) => state.done[n] || all).map((n) => state.done[n] ? STAMPS[n][0] : '・').join(' ');
+        function buildPdf(imgs) {
+            const enc = new TextEncoder(), parts = [], offs = [];
+            let len = 0;
+            const push = (x) => { const b = typeof x === 'string' ? enc.encode(x) : x; parts.push(b); len += b.length; };
+            const obj = (id, body) => { offs[id] = len; push(`${id} 0 obj\n`); body(); push('\nendobj\n'); };
+            const W = 420, H = 600;
+            push('%PDF-1.4\n');
+            obj(1, () => push('<< /Type /Catalog /Pages 2 0 R >>'));
+            obj(2, () => push(`<< /Type /Pages /Kids [${imgs.map((_, i) => `${3 + 3 * i} 0 R`).join(' ')}] /Count ${imgs.length} >>`));
+            imgs.forEach((im, i) => {
+                const p = 3 + 3 * i, cs = `q ${W} 0 0 ${H} 0 0 cm /Im0 Do Q`;
+                obj(p, () => push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /XObject << /Im0 ${p + 2} 0 R >> >> /Contents ${p + 1} 0 R >>`));
+                obj(p + 1, () => push(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`));
+                obj(p + 2, () => {
+                    push(`<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.bytes.length} >>\nstream\n`);
+                    push(im.bytes);
+                    push('\nendstream');
+                });
+            });
+            const xref = len, total = 3 + 3 * imgs.length;
+            push(`xref\n0 ${total}\n0000000000 65535 f \n`);
+            for (let i = 1; i < total; i++) push(`${String(offs[i]).padStart(10, '0')} 00000 n \n`);
+            push(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+            return new Blob(parts, { type: 'application/pdf' });
+        }
+        async function bookPdf() {
+            const photos = {}, out = [];
+            for (let s = 1; s <= TOTAL_STEPS; s++) {
+                const b = state.done[s] && await photoGet(s);
+                if (b) { try { photos[s] = await loadImg(b); } catch (e) { /* 読めない写真は飛ばす */ } }
+            }
+            // 表紙
+            let [c, g] = pdfCanvas();
+            g.textAlign = 'center';
+            g.fillStyle = '#9a8b74'; g.font = `24px ${SERIF}`; g.fillText('11.21 — 11.22', PW / 2, 120);
+            g.fillStyle = '#2b2620'; g.font = `52px ${SERIF}`; g.fillText('ページをひらく旅', PW / 2, 175);
+            const ims = Object.values(photos).slice(0, 6);
+            let y = 290;
+            if (ims.length) {
+                const cols = Math.min(3, ims.length), cw = 220, ch = 165, gap = 18;
+                const x0 = (PW - (cols * cw + (cols - 1) * gap)) / 2;
+                ims.forEach((im, i) => {
+                    const x = x0 + (i % cols) * (cw + gap), yy = y + Math.floor(i / cols) * (ch + gap);
+                    shadow(g, true); g.fillStyle = '#fff'; g.fillRect(x - 6, yy - 6, cw + 12, ch + 12); shadow(g, false);
+                    drawCover(g, im, x, yy, cw, ch);
+                });
+                y += Math.ceil(ims.length / cols) * (ch + gap) + 20;
+            }
+            g.font = '40px sans-serif'; g.fillStyle = '#2b2620';
+            wrapText(g, stampLine(false), PW / 2, y + 30, 700, 56, 3);
+            g.fillStyle = '#9a8b74'; g.font = `26px ${SERIF}`; g.fillText('ふたりの1冊', PW / 2, 1080);
+            out.push(await toJpeg(c));
+            // 各ページ
+            let no = 1;
+            for (let s = 1; s <= TOTAL_STEPS; s++) {
+                const d = state.done[s];
+                if (!d) continue;
+                const v = d.value ?? d.choiceIndex;
+                const type = cardOf(s).dataset.type;
+                const spot = behindText(s, v).split(/ ／ |\n/).map((t) => t.replace(/^\d+\. /, '').split('（')[0].split('：')[0]).filter(Boolean);
+                const went = type === 'plan' ? planCalc(s, v).plan.out.map((p) => p.name) : type === 'rank' ? v.slice(0, (state.visit || {})[s] || 0).map((i) => optionsOf(s)[i].dataset.place) : [];
+                const place = went.length ? `📍 ${went.join(' → ')}` : spot.length && type !== 'rank' && type !== 'plan' ? `📍 ${spot.join(' ／ ')}` : '';
+                [c, g] = pdfCanvas();
+                g.save(); g.translate(100, 110); g.rotate(-10 * Math.PI / 180);
+                g.strokeStyle = '#c2410c'; g.lineWidth = 4; g.beginPath(); g.arc(0, 0, 42, 0, Math.PI * 2); g.stroke();
+                g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '42px sans-serif'; g.fillText(STAMPS[s][0], 0, 2);
+                g.restore();
+                g.textAlign = 'left'; g.fillStyle = '#9a8b74'; g.font = `22px ${SERIF}`;
+                g.fillText(`PAGE ${String(no++).padStart(2, '0')} // ${STAMPS[s][1]}`, 170, 80);
+                g.fillText(timeLabel(d, s), 170, 116);
+                const pw = 660, ph = 495;
+                g.save(); g.translate(PW / 2, 200 + ph / 2 + 16); g.rotate(-2 * Math.PI / 180);
+                shadow(g, true); g.fillStyle = '#fff'; g.fillRect(-pw / 2 - 16, -ph / 2 - 16, pw + 32, ph + 64); shadow(g, false);
+                if (photos[s]) drawCover(g, photos[s], -pw / 2, -ph / 2, pw, ph);
+                else {
+                    g.fillStyle = '#f3ecdd'; g.fillRect(-pw / 2, -ph / 2, pw, ph);
+                    g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '150px sans-serif'; g.fillText(STAMPS[s][0], 0, 0);
+                }
+                g.restore();
+                g.textAlign = 'left'; g.textBaseline = 'top';
+                g.fillStyle = '#2b2620'; g.font = `32px ${SERIF}`;
+                y = wrapText(g, d.memo ? `「${d.memo}」` : '（ひとことなし）', 80, 800, 680, 48, 5);
+                g.fillStyle = '#6b5f4d'; g.font = `22px ${SERIF}`;
+                wrapText(g, choiceText(s, v) + (place ? `\n${place}` : ''), 80, y + 22, 680, 34, 7);
+                out.push(await toJpeg(c));
+            }
+            // 最後のページ
+            [c, g] = pdfCanvas();
+            g.textAlign = 'center';
+            g.fillStyle = '#9a8b74'; g.font = `24px ${SERIF}`; g.fillText('LAST PAGE', PW / 2, 300);
+            g.font = '40px sans-serif'; g.fillStyle = '#2b2620';
+            y = wrapText(g, stampLine(true), PW / 2, 370, 700, 56, 3);
+            g.font = `52px ${SERIF}`; g.fillText('Happy Anniversary', PW / 2, y + 60);
+            g.fillStyle = '#6b5f4d'; g.font = `26px ${SERIF}`;
+            g.fillText('2日間、一緒に旅をしてくれてありがとう。', PW / 2, y + 160);
+            g.fillText('次のページも、ふたりでひらいていこう。', PW / 2, y + 205);
+            out.push(await toJpeg(c));
+            return buildPdf(out);
+        }
+        window.bookPdfShare = async () => {
+            const b = $('bookPdf');
+            if (!pdfFile) {
+                b.disabled = true;
+                b.textContent = 'PDFを作っています…';
+                try {
+                    pdfFile = new File([await bookPdf()], `${PDF_NAME}.pdf`, { type: 'application/pdf' });
+                    b.textContent = '📤 PDFを共有する';
+                } catch (e) {
+                    b.textContent = '📄 PDFで保存・共有';
+                    alert('PDFを作れませんでした。もう一度試してください。');
+                }
+                b.disabled = false;
+                return;
+            }
+            if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                try { await navigator.share({ files: [pdfFile], title: PDF_NAME }); } catch (e) { /* キャンセル */ }
+                return;
+            }
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(pdfFile);
+            a.download = pdfFile.name;
+            document.body.appendChild(a); a.click(); a.remove();
+        };
         // 本の中から、写真のないページに写真を入れる（カードの写真と同じ場所に保存）
         window.bookPhoto = async (n, input) => {
             await addPhoto(n, input);
