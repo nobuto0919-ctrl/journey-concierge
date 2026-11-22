@@ -493,6 +493,18 @@
         .visit { margin-top: 16px; }
         .visit .reveal-box { margin-top: 0; }
         .visit-btn { margin-top: 14px; padding: 12px 22px; border-radius: 999px; border: 1px solid var(--accent-blue); background: var(--accent-glow); color: var(--text-main); font-size: 0.9rem; cursor: pointer; }
+        .plan-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; }
+        .plan-name { font-size: 0.95rem; }
+        .plan-name small { display: block; font-size: 0.72rem; color: var(--text-sub); margin-top: 2px; }
+        .plan-yn { display: flex; gap: 6px; flex-shrink: 0; }
+        .plan-yn button { padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: var(--text-main); font-size: 0.82rem; cursor: pointer; }
+        .plan-yn button.selected { border-color: var(--accent-blue); background: var(--accent-glow); }
+        .step-card.done .plan-yn { pointer-events: none; }
+        .plan-rank { margin-top: 14px; }
+        .plan-sheet { text-align: left; margin-top: 12px; line-height: 1.6; }
+        .plan-line { font-size: 0.95rem; font-weight: 600; }
+        .plan-move { font-size: 0.78rem; color: var(--text-sub); padding-left: 1em; }
+        .plan-skip { font-size: 0.8rem; color: var(--text-sub); margin-top: 10px; }
         .visit-done { margin-top: 10px; font-size: 0.8rem; color: var(--text-sub); line-height: 1.7; }
         /* 行き先発表の演出 */
         .thinking { text-align: center; padding: 22px 0 6px; font-size: 0.95rem; letter-spacing: 0.08em; color: var(--text-sub); animation: fadeIn 0.5s ease; }
@@ -894,15 +906,21 @@
         </div>
 
         <!-- Step 11 -->
-        <div class="step-card locked" id="step11" data-type="scale">
-            <div class="step-number">Step 11 // Dinner</div>
-            <div data-secret="11" data-enc="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"></div>
+        <div class="step-card locked" id="step11" data-type="plan">
+            <div class="step-number">Step 11 // Free Time Plan</div>
+            <div data-secret="11" data-enc="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"></div>
         </div>
 
         <!-- Step 12 -->
-        <div class="step-card locked" id="step12" data-type="multi">
-            <div class="step-number">Step 12 // Journey&#x27;s End</div>
-            <div data-secret="12" data-enc="aU9OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUBQRBh9DEhwAARMMDAFMXYrk+ITk6Izv64rn+ITkyYzv9ork9oTl4V2I9MyM5PSG4sGI9OyG88CG4+6L3OqG88yDzeSN4sqG8/iG4sGN4saKzvhZTAsHFVdvUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMEB0AAkoNCgEaQVcoBwsRCh8CBkkmGggMAApOgenxUoTk54zv7Irk1oTkxIzs4YDkyoTk2ozv3Yrk61tKBwYYXWNFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0BEx0MHQkWTggcDBwVUFlvQ09OQ0lFUkdFQ09OQ0lFUlsBChlOAAUEARRYQQAeFwAKHEoHFwFODhwJBg5HQwAAAAUMEQxYQRsBBA4JFygVFwYBDUFUQEtFFwcHEEBHTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ1MKCh9FEQsEEBxTQQYVBg4KDUIcAg0MHUVbX0AKCh9beEdFQ09OQ0lFUkdFQ09OQ0lFUkdFXxweAgdblN/MhdznhsfakebCgO7AgOv2kebWgO3kgOjykeb6hfbsiv/2TkgWEw4AXWNFUkdFQ09OQ0lFUkdFQ09OX0YBGxFbaU9OQ0lFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0BEx0MHQlIARsAQwQQHhMMQU8BDQoJGwQOXk0aDA4CHgIqExsHDAdNQ1VJQxsGChpMUFlvQ09OQ0lFUkdFQ09OQ0lFUkdFQ09SBwATUgQJAhwdXksKAhMMDAFDEQgBGwhHXVNBBwATTG1FQ09OQ0lFUkdFQ09OQ0lFUkdFQ1MdEwgLTILgyInm24rk3ITk94zvzIrn4VtKEB8PDVdvUkdFQ09OQ0lFUkdFQ09OQ1VKFg4TXWVOQ0lFUkdFQ09OQ0lFUkdFXwsHFUkGHgYWEFJMDBkRGwgLTg0aDUkIBwsRCk1ODAcGHg4GCFJMFwYCFQsALB8aCgYLWlZXT08aCwAWW0VbaU9OQ0lFUkdFQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHHRcRCgAAThsEFg4KQVFSTA0MBFlvQ09OQ0lFUkdFQ09OQ0lFUkdFQ09SEBkEHFmA7ueL3eWG88mAzOuN4eOM8/RZTBweAgdbeEdFQ09OQ0lFUkdFQ09OQ0lZXQMMFVFkQ0lFUkdFQ09OQ0lFUkdFQ1MKCh9FEQsEEBxTQQYVBg4KDUIMFwdFHxIJFwZMQwYLEQsMAARTQR0KFQAJBiAeFwAKHE9UUUNOFwEMAU5HXWVOQ0lFUkdFQ09OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUAgVFwYBDUQXEwMMDE1QX0YBGxFbaU9OQ0lFUkdFQ09OQ0lFUkdFQ09OXxoVEwlbi8f2htbQlPDAgOzpgOvGkeTvgOzSX0YWAgYLXWVOQ0lFUkdFQ09OQ0lFUkdFX0AKCh9beEdFQ09OQ0lFUkdFQ09OQ0lZFg4TQwwCAhoWT0UKExsHDAdIEBMLQwIbDx0MUEcKDQwCCgoOT0URDAgJDwwqAhMMDAFGUltJUhMNChxHQVdvUkdFQ09OQ0lFUkdFQ09OQ0lFUkdZBwYYQwoJExQWXk0BEx0MHQlIEQ4KCgZHTFtKBwYYXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUlsWEw4AXYrkx4Tk/Izs6Yrk1Y7k7Yzv94rk5YTk/IjJ2Izu54TkzYn34YDz4VtKEB8PDVdvUkdFQ09OQ0lFUkdFQ09OQ1VKFg4TXWVOQ0lFUkdFQ09OQ0lZXQMMFVFkQ0lFUkdFQ09OQ0lFTgMMFU8NDwgWAVpHFwoWF0QMHBcQF0IZEQgVAgIXQVFkQ0lFUkdFQ09OQ0lFUkdFQ1MKCh9FEQsEEBxTQRkEFQJIDw4MBgVHTDckJCpOLSYxN0dKTE+N4vqG88mG4PWN4NWG8N+G4sSN4tuG88+G4vyN4sGKzu+A3OqHw+GG8dyD5/CI4NqG88CG4e0hKIrl8ILj+ojy/Irk2oPd44jZ8Yrk2YTl4ony44zb/oTkyF6L5eOG88mD/8ON4sKG882G4eWN4teG8/6K3+ZSTA0MBFlvQ09OQ0lFUkdFQ09OQ0lFUlsRBhcaAhsAE0cVDw4NBgEKHgMAEVJMhf7gkebLhevxherWkeX3gO7cgOjNkeb2gO7GgOjMkebjgO7wjNXtlOP6hezdgOjCkeXnLCSB3+BHUg4BXk0HDRkQBlZXQU8BDQALAhIRXk0cBg8XFxQNIRsAS1hXW0VbX0AaBhERExUAAlFkQ0lFUkdFQ09OQ0lFUkdFQ1MCAgsAHkcGDw4dEFRHAQIJBQYLTgsRHEcNDBtMXZn64d9FgO7bgOj6keXvgO7Ji+7PlPXLgO3kgOjykeXtgO7oXwALAhIRQxsXEwxYUAEMDwpMQwgGEQIVF1JMCgQEFQJKSU1ODAcGGgYLBApTQQgBFjcNDBsBS1hXXkcRCwYdSktbTkgJAg0LD1dvUkdFQ09OQ0lFUkdFQ09OQ1UBGxFFAAMPEBpYUBQADwkHBkQVAAITCgoZQUkMFlpHEwcBFwZUQEVbX0AKCh9beEdFQ09OQ0lFUkdFQ1NBBwATTG1FQ09OQ0lFUkdFQ09SARwRBggLQwwCAhoWT0UWFg0DCh1IEBMLQU8HB1RHEBMLUl1MQwYLEQsMAARTQRoQEAoMFzwaBhlNQ1VMQU8KChoEEAsAB1GLzeWByOGG4vaN4eJZXQUQFxsBDVdvUkdFQ09OQ0lFUkdFXwsHFUkMFlpHEQoYBggJQ1VHQxwaGgUAT0UBChweDwgcSEcLDAELWEtbeEdFQ09OQ0lFUkdFQ09OQ0lZFg4TQwwCAhoWT0UXBhkLAgVIEAgdQVFkQ0lFUkdFQ09OQ0lFUkdFQ09OQ0lZFg4TQwwCAhoWT0UXBhkLAgVIHgYHBgNMXSEEAhccQy4ADQATFxUWAh0XX0YBGxFbaU9OQ0lFUkdFQ09OQ0lFUkdFQ09OXw0MBEcGDw4dEFRHAAITBg4CTg0AARMMDQ4aCgYLUFkxCw4ACEkcHRJFBQAcQx0NF0cPDBocDQwcXFtKBwYYXWNFUkdFQ09OQ0lFUkdFQ09OQ0lFUlsBChlOAAUEARRYQR0LFQwEHkoBBhwNQVdXlPDAivn9gOnklt/lhNj8gOjOlPDggO38gOjykebDgO7hgOvpkebDgO7sgOvvkebpgO7GgOjjkefngO79gOvpkebugO3ngOvnkefkgO7QgOjFms3IgO39gOjFkeb2gO7GgOjLkebPgO7qgOr/keTZgO3WgOv3kefkgO7bgOj6keXvgO7JgOvkkebqgO7NgOjDkebhgO79gOjjkefnX0AKCh9beEdFQ09OQ0lFUkdFQ09OQ0lZXQMMFVFkQ0lFUkdFQ09OQ0lFTkgBChlQ"></div>
+        <div class="step-card locked" id="step12" data-type="scale">
+            <div class="step-number">Step 12 // Dinner</div>
+            <div data-secret="12" data-enc="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"></div>
+        </div>
+
+        <!-- Step 13 -->
+        <div class="step-card locked" id="step13" data-type="multi">
+            <div class="step-number">Step 13 // Journey&#x27;s End</div>
+            <div data-secret="13" data-enc="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"></div>
         </div>
         <!-- STEPS:END -->
         <div class="hand" id="stampBook" hidden>
@@ -931,7 +949,7 @@
         const openAt = (step) => STEP_OPEN_AT && STEP_OPEN_AT[step] ? new Date(STEP_OPEN_AT[step]) : null;
         const isOpen = (step) => { const t = openAt(step); return !t || now() >= t; };
 
-        const TOTAL_STEPS = 12;
+        const TOTAL_STEPS = 13;
         // ?now= 付きで開くと「プレビューモード」：回答は送信せず、本番とは別の場所に保存する
         const isPreview = !!nowOverride;
         const STATE_KEY = isPreview ? 'ajc-state-preview' : 'ajc-state';
@@ -1000,6 +1018,7 @@
         // 送信ボタン：選んでいて、ひとことも書いてあるときだけ押せる
         function hasSel(step) {
             const v = selections[step];
+            if (cardOf(step).dataset.type === 'plan') return planReady(step, v);
             if (cardOf(step).dataset.type === 'free') return true; // 自由記入：ひとこと欄が答え
             if (v === undefined) return false;
             if (cardOf(step).dataset.type === 'rank') return v.length === optionsOf(step).length;
@@ -1068,6 +1087,7 @@
             const type = cardOf(step).dataset.type;
             if (type === 'scale') return `${scaleText(step, value)}（${value}/5）`;
             if (type === 'free') return '自由記入';
+            if (type === 'plan') { const r = planRows(step).map((x) => x.dataset.name); const no = r.filter((_, i) => !value.go[i]); return `行きたい順：${value.order.map((i) => r[i]).join(' → ') || 'なし'}${no.length ? ` ／ 行かない：${no.join('・')}` : ''}`; }
             const texts = optionsOf(step).map(b => b.querySelector('span').textContent.trim());
             if (type === 'multi') return value.map(i => texts[i]).join('・');
             if (type === 'rank') return value.map((i, r) => `${r + 1}. ${texts[i]}`).join(' → ');
@@ -1076,6 +1096,7 @@
         // 選択肢の裏にある候補（彼女の画面には出さず、回答と一緒にホストへ送る）
         function behindText(step, value) {
             const card = cardOf(step);
+            if (card.dataset.type === 'plan') return planText(step, value);
             if (card.dataset.type === 'scale') {
                 const sc = card.querySelector('.scale');
                 const l = sc.dataset.leftBehind || '', r = sc.dataset.rightBehind || '';
@@ -1091,6 +1112,7 @@
             const type = cardOf(step).dataset.type;
             if (type === 'scale') return paintScale(step, value);
             if (type === 'rank') return paintRank(step, value);
+            if (type === 'plan') return paintPlan(step, value);
             const idx = Array.isArray(value) ? value : [value];
             optionsOf(step).forEach((b, i) => b.classList.toggle('selected', idx.includes(i)));
         }
@@ -1105,6 +1127,7 @@
 
             const reveal = $(`reveal${step}`);
             if (card.dataset.type === 'rank') renderVisit(step, animate);
+            if (card.dataset.type === 'plan') renderPlan(step, animate);
 
             // 行き先の発表：思考中… → 合致する場所を発見 → 発表のボックスへフォーカス
             if (reveal && animate && reveal.contains($('destSealed'))) {
@@ -1135,14 +1158,15 @@
             if (reveal) reveal.style.display = 'block';
 
             applySeals();
-            const match = card.dataset.type !== 'rank' && renderMatch(step);
+            const stays = ['rank', 'plan'].includes(card.dataset.type);
+            const match = !stays && renderMatch(step);
             renderStamp(step, animate);
             if (step === TOTAL_STEPS) renderBookButton(step);
             if (!animate) return;
             // カード形式：送信したら次のカードへ（演出や案内があるカードは「次へ」で進む）
             if (reveal) setTimeout(() => reveal.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
             else if (match) setTimeout(() => match.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
-            else if (card.dataset.type !== 'rank' && $(`step${step + 1}`)) setTimeout(() => deckGo(DECK.indexOf(`step${step + 1}`)), 700);
+            else if (!stays && $(`step${step + 1}`)) setTimeout(() => deckGo(DECK.indexOf(`step${step + 1}`)), 700);
             deckNav();
         }
 
@@ -1266,7 +1290,7 @@
         // ---------- スタンプ：答えるたびに、その場面のスタンプが押される ----------
         const STAMPS = {
             1: ['🚄', 'Departure'], 2: ['🍱', 'Transit'], 3: ['📝', 'Wish List'], 4: ['🐟', 'Arrival'], 5: ['♨️', 'Check-in'], 6: ['🏮', 'Night'],
-            7: ['🌅', 'Morning'], 8: ['👘', 'Check-out'], 9: ['🦪', 'Lunch'], 10: ['🌊', 'Afternoon'], 11: ['🥂', 'Evening'], 12: ['🌙', 'Homeward'],
+            7: ['🌅', 'Morning'], 8: ['👘', 'Check-out'], 9: ['🦪', 'Lunch'], 10: ['🌊', 'Afternoon'], 11: ['🗺️', 'Free Time'], 12: ['🥂', 'Evening'], 13: ['🌙', 'Homeward'],
         };
         function renderStamp(step, animate) {
             const card = cardOf(step);
@@ -1384,8 +1408,8 @@
                 const v = d.value ?? d.choiceIndex;
                 const type = cardOf(s).dataset.type;
                 const spot = behindText(s, v).split(/ ／ |\n/).map((t) => t.replace(/^\d+\. /, '').split('（')[0].split('：')[0]).filter(Boolean);
-                const went = type === 'rank' ? v.slice(0, (state.visit || {})[s] || 0).map((i) => optionsOf(s)[i].dataset.place) : [];
-                const place = went.length ? `📍 ${went.join(' → ')}` : spot.length && type !== 'rank' ? `📍 ${spot.join(' ／ ')}` : '';
+                const went = type === 'plan' ? planCalc(s, v).plan.out.map((p) => p.name) : type === 'rank' ? v.slice(0, (state.visit || {})[s] || 0).map((i) => optionsOf(s)[i].dataset.place) : [];
+                const place = went.length ? `📍 ${went.join(' → ')}` : spot.length && type !== 'rank' && type !== 'plan' ? `📍 ${spot.join(' ／ ')}` : '';
                 pages.push(`<div class="book-page">
                     <div class="book-head"><div class="book-stamp">${STAMPS[s][0]}</div>
                         <div><div class="book-no">PAGE ${String(pages.length).padStart(2, '0')} // ${STAMPS[s][1]}</div>
@@ -1473,6 +1497,97 @@
                     <div class="reveal-desc">${opts[order[k]].querySelector('span').textContent.trim()}</div>
                     <button type="button" class="visit-btn" onclick="visited(${step})">行きました！</button>${log}</div>`;
             }
+            if (animate) setTimeout(() => box.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+        }
+
+        // ---------- 工程表：行く／行かない → 行きたい順 → 時間内に回れる順路を作る ----------
+        const planRows = (step) => [...cardOf(step).querySelectorAll('.plan-row')];
+        window.planGo = (step, i, v) => {
+            if (state.done[step]) return;
+            const s = selections[step] || { go: planRows(step).map(() => null), order: [] };
+            s.go[i] = v;
+            s.order = s.order.filter((k) => s.go[k]);
+            selections[step] = s;
+            paintPlan(step, s);
+            refreshBtn(step);
+        };
+        window.planPick = (step, i) => {
+            if (state.done[step]) return;
+            const s = selections[step];
+            const at = s.order.indexOf(i);
+            if (at >= 0) s.order.splice(at, 1); else s.order.push(i);
+            paintPlan(step, s);
+            refreshBtn(step);
+        };
+        const planReady = (step, s) => s && s.go.every((g) => g !== null) && s.order.length === s.go.filter(Boolean).length;
+        function paintPlan(step, s) {
+            const rows = planRows(step);
+            rows.forEach((r, i) => r.querySelectorAll('.plan-yn button').forEach((b, k) => b.classList.toggle('selected', s.go[i] === (k ? 0 : 1))));
+            const all = s.go.every((g) => g !== null);
+            $(`planRank${step}`).hidden = !all || !s.go.some(Boolean);
+            $(`planPicks${step}`).innerHTML = rows.map((r, i) => {
+                if (!s.go[i]) return '';
+                const k = s.order.indexOf(i);
+                return `<div class="option-btn plan-pick${k >= 0 ? ' selected' : ''}" onclick="planPick(${step}, ${i})"><div class="option-radio">${k >= 0 ? k + 1 : ''}</div><span>${r.dataset.name}</span></div>`;
+            }).join('');
+        }
+        const hm = (t) => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+        const toMin = (x) => Number(x.split(':')[0]) * 60 + Number(x.split(':')[1]);
+        // 移動の目安（分）：s=出発駅 c=中心街 k=海沿いの神社 t=海岸。中心街の中は徒歩、それ以外はタクシー
+        const MOVE = { 'c-c': 5, 's-c': 20, 's-k': 30, 's-t': 40, 'c-k': 25, 'c-t': 35, 'k-t': 15, 'k-k': 0, 't-t': 0 };
+        const move = (a, b) => MOVE[`${a}-${b}`] ?? MOVE[`${b}-${a}`];
+        function planCalc(step, s) {
+            const L = cardOf(step).querySelector('.plan-list').dataset;
+            const rows = planRows(step).map((r) => ({ name: r.dataset.name, area: r.dataset.area, stay: Number(r.dataset.stay) }));
+            const start = toMin(L.startAt), goal = toMin(L.goalAt);
+            const perms = (a) => a.length <= 1 ? [a] : a.flatMap((x, i) => perms([...a.slice(0, i), ...a.slice(i + 1)]).map((p) => [x, ...p]));
+            const sim = (route) => {
+                let t = start, loc = 's';
+                const out = [];
+                for (const i of route) {
+                    const p = rows[i], m = move(loc, p.area);
+                    t += m;
+                    out.push({ i, name: p.name, move: m, walk: loc === 'c' && p.area === 'c', arrive: t, leave: t + p.stay });
+                    t += p.stay;
+                    loc = p.area;
+                }
+                const m = move(loc, 'c');
+                return { out, end: t + m, lastMove: m, lastWalk: loc === 'c' };
+            };
+            const best = (set) => perms(set).map(sim).sort((a, b) => a.end - b.end)[0];
+            let chosen = [];
+            const skipped = [];
+            for (const i of s.order) {
+                const r = best([...chosen, i]);
+                if (r.end <= goal) chosen.push(i); else skipped.push(i);
+            }
+            return { L, start, goal, plan: best(chosen), skipped: skipped.map((i) => rows[i].name), no: rows.filter((_, i) => !s.go[i]).map((r) => r.name) };
+        }
+        function planText(step, s) {
+            const { L, start, goal, plan, skipped } = planCalc(step, s);
+            const lines = [`${hm(start)} ${L.start}を出発`];
+            for (const p of plan.out) {
+                lines.push(`　↓ ${p.walk ? '徒歩' : 'タクシー'}約${p.move}分`);
+                lines.push(`${hm(p.arrive)}〜${hm(p.leave)} ${p.name}`);
+            }
+            lines.push(`　↓ ${plan.lastWalk ? '徒歩' : 'タクシー'}約${plan.lastMove}分`);
+            if (goal - plan.end >= 10) lines.push(`${hm(plan.end)}〜 ${L.center}でのんびり`);
+            lines.push(`${hm(goal)} ${L.goal}`);
+            if (skipped.length) lines.push(`今回は見送り：${skipped.join('・')}（時間が足りないため）`);
+            return lines.join('\n');
+        }
+        function renderPlan(step, animate) {
+            let box = $(`visit${step}`);
+            if (!box) {
+                box = document.createElement('div');
+                box.className = 'visit';
+                box.id = `visit${step}`;
+                $(`btn${step}`).after(box);
+            }
+            const t = planText(step, state.done[step].value).split('\n');
+            box.innerHTML = `<div class="reveal-box"><div class="reveal-label">Your Free Time Plan</div>
+                <div class="plan-sheet">${t.map((x) => `<div class="${x.startsWith('　') ? 'plan-move' : x.startsWith('今回') ? 'plan-skip' : 'plan-line'}">${x.trim()}</div>`).join('')}</div>
+                <div class="visit-done">移動時間は目安です。タクシーは駅や中心街で。</div></div>`;
             if (animate) setTimeout(() => box.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
         }
         window.visited = (step) => {
