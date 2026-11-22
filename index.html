@@ -615,7 +615,14 @@
         .book-stamps { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0; }
         .book-stamps span { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #c2410c; color: #c2410c; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
         .book-stamps span.off { border-style: dashed; border-color: #d9caa9; color: #d9caa9; }
-        .book-close { position: fixed; top: 16px; right: 18px; background: none; border: none; color: #fff; font-size: 1.6rem; cursor: pointer; z-index: 51; }
+        .book-close { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 14px); right: 16px; width: 44px; height: 44px; border-radius: 50%;
+                      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.5); color: #fff; font-size: 1.5rem; line-height: 1;
+                      display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 51; }
+        .polaroid.add { position: relative; flex-direction: column; gap: 8px; cursor: pointer; border: 2px dashed #c9b48f; }
+        .polaroid.add span { font-size: 0.85rem; color: #8a5a1f; font-family: inherit; }
+        .polaroid.add input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .book-photo-change { position: relative; display: block; text-align: center; font-size: 0.75rem; color: #9a8b74; margin: -8px 0 12px; cursor: pointer; }
+        .book-photo-change input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
         .deck-mode .deck-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; }
         .deck-nav button { padding: 11px 18px; border-radius: 999px; border: 1px solid var(--accent-blue); background: var(--accent-glow); color: var(--text-main); font-size: 0.85rem; cursor: pointer; }
         .deck-nav button:disabled { opacity: 0.25; cursor: default; border-color: var(--card-border); background: transparent; }
@@ -1414,7 +1421,9 @@
                     <div class="book-head"><div class="book-stamp">${STAMPS[s][0]}</div>
                         <div><div class="book-no">PAGE ${String(pages.length).padStart(2, '0')} // ${STAMPS[s][1]}</div>
                         <div class="book-time">${timeLabel(d, s)}</div></div></div>
-                    ${photos[s] ? `<div class="polaroid"><img src="${photos[s]}" alt=""></div>` : `<div class="polaroid none">${STAMPS[s][0]}</div>`}
+                    ${photos[s] ? `<div class="polaroid"><img src="${photos[s]}" alt=""></div>
+                        <label class="book-photo-change">📷 写真を変える<input type="file" accept="image/*" onchange="bookPhoto(${s}, this)"></label>`
+                    : `<label class="polaroid none add">${STAMPS[s][0]}<span>📷 タップして写真を入れる</span><input type="file" accept="image/*" onchange="bookPhoto(${s}, this)"></label>`}
                     ${d.memo ? `<div class="book-word">「${esc(d.memo)}」</div>` : '<div class="book-word none">（ひとことなし）</div>'}
                     <div class="book-meta">${esc(choiceText(s, v))}${place ? `<br>${esc(place)}` : ''}</div>
                 </div>`);
@@ -1446,6 +1455,11 @@
                 <button onclick="openBook(${bookAt + 1})" ${bookAt === pages.length - 1 ? 'disabled' : ''}>次のページ →</button></div></div>`;
         };
         window.closeBook = () => { $('book').hidden = true; };
+        // 本の中から、写真のないページに写真を入れる（カードの写真と同じ場所に保存）
+        window.bookPhoto = async (n, input) => {
+            await addPhoto(n, input);
+            openBook(bookAt, true);
+        };
 
         // 選んだ答えに合う場所（選択肢の裏の候補）があれば、送信後にカードの中で見せる
         function renderMatch(step) {
