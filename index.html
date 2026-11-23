@@ -623,6 +623,9 @@
         .polaroid.add input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
         .book-pdf { display: block; width: 100%; margin-top: 12px; padding: 12px; border-radius: 999px; border: 1px solid #c9b48f; background: #fbf7ee; color: #6b5f4d; font-size: 0.9rem; cursor: pointer; }
         .book-pdf:disabled { opacity: 0.6; }
+        .book-swipe { font-size: 0.72rem; color: #b3a68f; letter-spacing: 0.05em; }
+        @keyframes slideL { from { transform: translateX(60%); opacity: 0; } to { transform: none; opacity: 1; } }
+        @keyframes slideR { from { transform: translateX(-60%); opacity: 0; } to { transform: none; opacity: 1; } }
         .book-input { width: 100%; min-height: 90px; border: 1px solid #d9caa9; border-radius: 10px; background: #fff; color: #2b2620; padding: 10px; font-size: 16px; font-family: inherit; }
         .book-del { background: none; border: none; color: #b3a68f; font-size: 0.75rem; text-decoration: underline; cursor: pointer; padding: 0; }
         #extraLayer { overflow-y: auto; align-items: flex-start; padding-top: calc(env(safe-area-inset-top, 0px) + 70px); }
@@ -1884,7 +1887,8 @@
                 <div class="book-no">${y}.${pad2(m + 1)}</div>
                 <div class="book-h">ふたりの思い出<br>${m + 1}月</div>
                 ${collage ? `<div class="book-collage">${collage}</div>` : ''}
-                <div class="book-no">${items.length} MEMORIES</div></div>`];
+                <div class="book-no">${items.length} MEMORIES</div>
+                <div class="book-swipe">← 左右にスワイプで、前後の月の本へ →</div></div>`];
             if (!items.length) pages.push(`<div class="book-page book-cover"><div class="book-q">この月の思い出はまだありません。<br>カレンダーの日付をタップして登録してね。</div></div>`);
             items.forEach((x) => pages.push(`<div class="book-page">
                 <div class="book-head"><div class="book-stamp">${Number(x.date.slice(8))}</div>
@@ -1945,10 +1949,31 @@
             out.push(await toJpeg(c));
             return buildPdf(out);
         }
-        window.memBook = () => {
+        window.memBook = async (k = 0) => {
             const [y, m] = memYM;
             bookMaker = memPages; pdfMaker = memPdf; pdfName = () => `ふたりの思い出${y}年${m + 1}月`;
-            openBook(0, true);
+            await openBook(0, true);
+            const p = document.querySelector('#book .book-page');
+            if (p && k) p.style.animation = `${k > 0 ? 'slideL' : 'slideR'} 0.35s ease`;
+        };
+        // 月の本：左スワイプで次の月、右スワイプで前の月の本を開く
+        let swipe = null;
+        document.addEventListener('touchstart', (e) => {
+            swipe = bookMaker === memPages && e.target.closest && e.target.closest('#book') && e.touches.length === 1
+                ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+        }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+            if (!swipe || $('book').hidden) return;
+            const t = e.changedTouches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y;
+            swipe = null;
+            if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx) * 0.7) return;
+            memSwipe(dx < 0 ? 1 : -1);
+        }, { passive: true });
+        window.memSwipe = (k) => {
+            const d = new Date(memYM[0], memYM[1] + k, 1);
+            memYM = [d.getFullYear(), d.getMonth()];
+            renderCal();
+            memBook(k);
         };
         setTab(localStorage.getItem('ajc-tab') || 'trip');
         // 本の中から、写真のないページに写真を入れる（カードの写真と同じ場所に保存）
