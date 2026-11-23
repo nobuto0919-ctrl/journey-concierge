@@ -625,6 +625,7 @@
         .book-pdf:disabled { opacity: 0.6; }
         .book-input { width: 100%; min-height: 90px; border: 1px solid #d9caa9; border-radius: 10px; background: #fff; color: #2b2620; padding: 10px; font-size: 16px; font-family: inherit; }
         .book-del { background: none; border: none; color: #b3a68f; font-size: 0.75rem; text-decoration: underline; cursor: pointer; padding: 0; }
+        #extraLayer { overflow-y: auto; align-items: flex-start; padding-top: calc(env(safe-area-inset-top, 0px) + 70px); }
         #extraPick { position: relative; }
         #extraPick input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
         #extraPick img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
@@ -1393,7 +1394,15 @@
             b.textContent = '📖 ふたりの1冊をひらく';
             b.onclick = () => openBook(0, true);
             const r = $(`reveal${step}`);
-            (r ? r.querySelector('.reveal-box') : cardOf(step)).appendChild(b);
+            const box = r ? r.querySelector('.reveal-box') : cardOf(step);
+            box.appendChild(b);
+            const a = document.createElement('button');
+            a.id = 'extraBtn';
+            a.type = 'button';
+            a.className = 'visit-btn book-btn';
+            a.textContent = '＋ 思い出を追加する';
+            a.onclick = () => extraOpen();
+            box.appendChild(a);
         }
         function timeLabel(d, s) {
             const t = d.at ? new Date(d.at) : openAt(s);
@@ -1450,14 +1459,6 @@
                     <div class="book-meta"><button type="button" class="book-del" onclick="extraDel(${x.id})">このページを消す</button></div>
                 </div>`);
             }
-            pages.push(`<div class="book-page">
-                <div class="book-no">ADD A PAGE</div>
-                <div class="book-h">思い出を追加する</div>
-                <div class="book-q">旅のあとでも、写真とひとことを何ページでも足せます。</div>
-                <label class="polaroid none add" id="extraPick">📷<span>📷 タップして写真を選ぶ</span><input type="file" accept="image/*" onchange="extraPhoto(this)"></label>
-                <textarea id="extraMemo" class="book-input" placeholder="ひとこと（写真だけでもOK）"></textarea>
-                <button type="button" class="book-pdf" onclick="extraAdd()">＋ このページを本に加える</button>
-            </div>`);
             pages.push(`<div class="book-page book-cover">
                 <div class="book-no">LAST PAGE</div>
                 ${stampsHTML(true)}
@@ -1684,17 +1685,51 @@
                 box.innerHTML = `<img src="${URL.createObjectURL(extraBlob)}" alt=""><input type="file" accept="image/*" onchange="extraPhoto(this)">`;
             } catch (e) { alert('写真を読み込めませんでした。'); }
         };
+        function extraLayer() {
+            let el = $('extraLayer');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'extraLayer';
+                el.className = 'book';
+                document.body.appendChild(el);
+            }
+            el.hidden = false;
+            return el;
+        }
+        window.extraOpen = () => {
+            extraBlob = null;
+            extraLayer().innerHTML = `<button class="book-close" onclick="extraClose()" aria-label="閉じる">×</button>
+                <div class="book-page" style="min-height:auto">
+                <div class="book-no">ADD A PAGE // ${(state.extras || []).length + 1}</div>
+                <div class="book-h">思い出を追加する</div>
+                <div class="book-q">写真とひとことが、ふたりの1冊の新しいページになります。</div>
+                <label class="polaroid none add" id="extraPick">📷<span>📷 タップして写真を選ぶ</span><input type="file" accept="image/*" onchange="extraPhoto(this)"></label>
+                <textarea id="extraMemo" class="book-input" placeholder="ひとこと（写真だけでもOK）"></textarea>
+                <button type="button" class="book-pdf" id="extraSave" onclick="extraAdd()">＋ このページを本に加える</button></div>`;
+        };
+        window.extraClose = () => { const el = $('extraLayer'); if (el) el.hidden = true; };
         window.extraAdd = async () => {
             const memo = $('extraMemo').value.trim().slice(0, 400);
             if (!memo && !extraBlob) { alert('写真かひとことを入れてください。'); return; }
+            $('extraSave').disabled = true;
             const id = Date.now();
-            try { if (extraBlob) await photoPut(`x${id}`, extraBlob); } catch (e) { alert('写真を保存できませんでした。'); return; }
+            try { if (extraBlob) await photoPut(`x${id}`, extraBlob); } catch (e) { alert('写真を保存できませんでした。'); $('extraSave').disabled = false; return; }
             state.extras = [...(state.extras || []), { id, memo, at: new Date().toISOString() }];
             save();
+            const u = extraBlob && URL.createObjectURL(extraBlob);
             extraBlob = null;
-            await openBook(0, true);
-            openBook(bookCache.length - 3);
+            bookCache = null;
+            const n = state.extras.length;
+            extraLayer().innerHTML = `<div class="book-page book-cover" style="min-height:auto">
+                <div class="book-no">PAGE ADDED // Memories ${n}</div>
+                ${u ? `<div class="polaroid"><img src="${u}" alt=""></div>` : ''}
+                <div class="book-h">本に追加しました！</div>
+                <div class="book-q">続けて追加しますか？</div>
+                <button type="button" class="book-pdf" onclick="extraOpen()">＋ もう1ページ追加する</button>
+                <button type="button" class="book-pdf" onclick="extraClose(); extraShow()">📖 本で見る</button>
+                <button type="button" class="book-pdf" onclick="extraClose()">おわる</button></div>`;
         };
+        window.extraShow = async () => { await openBook(0, true); openBook(bookCache.length - 2); };
         window.extraDel = async (id) => {
             if (!confirm('このページを本から消しますか？')) return;
             state.extras = (state.extras || []).filter((x) => x.id !== id);
