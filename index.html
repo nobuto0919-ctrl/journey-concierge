@@ -1021,7 +1021,7 @@
     <script type="module">
         import { sendAnswer, startAutoFlush, pendingCount, isDemo } from './sync.js';
         import { STEP_OPEN_AT, DESTINATION_REVEAL_AT } from './config.js';
-        import { createShare, shareReady, newCode, showCode } from './share.js';
+        import { createShare, shareReady, pushReady, newCode, showCode } from './share.js';
 
         // ?now=2026-11-21T09:00 で時刻を上書きしてテストできる（日本時間として扱う）
         const nowOverride = new URLSearchParams(location.search).get('now');
@@ -1792,6 +1792,7 @@
             const id = Date.now();
             try { if (extraBlob) await photoPut(`x${id}`, extraBlob); } catch (e) { alert('写真を保存できませんでした。'); $('extraSave').disabled = false; return; }
             state.extras = [...(state.extras || []), { id, memo, at: new Date().toISOString() }];
+            shareNote('旅の本にページを追加しました');
             save();
             const u = extraBlob && URL.createObjectURL(extraBlob);
             extraBlob = null;
@@ -1920,6 +1921,7 @@
                 for (let i = 0; i < memNew.length; i++) await photoPut(ks[i], memNew[i]);
             } catch (e) { alert('写真を保存できませんでした。'); $('extraSave').disabled = false; return; }
             state.memories = [...memList(), x];
+            shareNote(`${dayLabel(memDate).split(' ')[0].replace('.', '/')}の思い出を追加しました${x.photos ? `（写真${x.photos}枚）` : ''}`);
             save();
             const shown = memNew.slice(0, 6).map((b) => `<img src="${URL.createObjectURL(b)}" alt="">`).join('');
             const n = memNew.length;
@@ -2073,7 +2075,7 @@
                 },
                 onStatus: (st) => {
                     $('shareState').textContent = shareLabel(st);
-                    if (shareSheet && $('extraLayer') && !$('extraLayer').hidden) shareOpen();
+                    if (shareSheet && $('extraLayer') && !$('extraLayer').hidden && !(document.activeElement && document.activeElement.tagName === 'INPUT')) shareOpen();
                 },
             });
             $('shareBtn').hidden = false;
@@ -2095,6 +2097,8 @@
                 <div class="share-code">${showCode(c)}</div>
                 <div class="book-q" style="font-size:0.8rem">もう1台のスマホで、このアプリの「🔗 2人で共有」→「コードを入れて参加」に入れてください。このコードを知っている人は中身を見られるので、2人の間だけで使ってね。</div>
                 <button type="button" class="book-pdf" onclick="shareCopy()">📋 コードをコピー</button>
+                ${notifyBlock()}
+                <div class="book-no" style="margin-top:18px">共有をやめる</div>
                 <button type="button" class="book-pdf" onclick="shareStop()" style="opacity:0.7">このスマホの共有をやめる</button>`
                 : `
                 <div class="book-q">思い出カレンダーと旅の本（写真・ひとこと・回答）を、2台のスマホで一緒に使えます。中身はスマホの中で暗号化してから保存します。</div>
@@ -2107,6 +2111,35 @@
                 </div>`;
         };
         window.shareClose = () => { shareSheet = false; extraClose(); };
+        // 相手への通知：「〇〇が△△しました」
+        function shareNote(what) {
+            if (!share || !share.code) return;
+            share.note(`${share.name || '相手'}が${what}`);
+        }
+        function notifyBlock() {
+            if (!pushReady) return '';
+            const on = share.notifyOn;
+            return `<div class="book-no" style="margin-top:18px">通知</div>
+                <div class="book-q" style="font-size:0.8rem">相手が写真や思い出を追加したら、このスマホに通知が届きます。通知には「誰が・何を追加したか」だけが出ます。</div>
+                <input id="shareName" class="book-input share-input" style="text-transform:none" maxlength="20" placeholder="このスマホの人の名前（例：りお）" value="${escH(share.name)}" onchange="shareSetName(this.value)">
+                <div class="book-q" style="font-size:0.72rem">↑ 相手への通知に「〇〇が写真を追加しました」と出る名前です。</div>
+                ${on ? `<div class="share-state">🔔 通知オン</div>
+                    <button type="button" class="book-pdf" onclick="shareNotify(false)" style="opacity:0.7">通知をオフにする</button>`
+                : `<button type="button" class="book-pdf" id="notifyGo" onclick="shareNotify(true)">🔔 通知をオンにする</button>
+                    ${share.canPush ? '' : '<div class="book-q" style="font-size:0.72rem">iPhone は、ホーム画面に追加したアプリから開くとオンにできます（iOS 16.4 以降）。</div>'}`}`;
+        }
+        window.shareSetName = (v) => { share.name = v; };
+        window.shareNotify = async (on) => {
+            if (on) {
+                const v = $('shareName').value.trim();
+                if (!v) { alert('先に、このスマホの人の名前を入れてください。'); $('shareName').focus(); return; }
+                share.name = v;
+                const b = $('notifyGo');
+                b.disabled = true; b.textContent = '設定しています…';
+                try { await share.enableNotify(); } catch (e) { alert(e.message || '通知をオンにできませんでした'); }
+            } else await share.disableNotify();
+            shareOpen();
+        };
         window.shareBegin = async (join) => {
             const c = join ? $('shareInput').value : newCode();
             if (join && !confirm('このコードの共有に参加しますか？\nこのスマホの思い出も、相手と共有されます。')) return;
@@ -2128,6 +2161,7 @@
         // 本の中から、写真のないページに写真を入れる（カードの写真と同じ場所に保存）
         window.bookPhoto = async (n, input) => {
             await addPhoto(n, input);
+            if (input.files && input.files[0]) shareNote('旅の本に写真を入れました');
             openBook(bookAt, true);
         };
 

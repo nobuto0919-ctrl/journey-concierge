@@ -2,7 +2,7 @@
 // - 自分のファイル：まずネットから最新を取り、ダメならキャッシュ（電波がなくても開ける）
 // - フォント・Firebase SDK：キャッシュ優先（バージョン固定なので変わらない）
 // ファイルを更新したら VERSION を上げると、古いキャッシュが消えます。
-const VERSION = "ajc-v46";
+const VERSION = "ajc-v47";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -85,4 +85,27 @@ self.addEventListener("fetch", (e) => {
         .catch(() => caches.match(req, { ignoreSearch: true }).then((hit) => hit || caches.match("./index.html")))
     );
   }
+});
+
+// ---------- 通知：相手が思い出を追加したとき ----------
+self.addEventListener("push", (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data ? e.data.text() : "" }; }
+  e.waitUntil(
+    self.registration.showNotification(d.title || "ふたりの思い出", {
+      body: d.body || "新しい思い出が届きました",
+      icon: "./icons/icon-192.png",
+      badge: "./icons/icon-192.png",
+      data: { url: d.url || "./" },
+    })
+  );
+});
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const c of list) if ("focus" in c) return c.focus();
+      return self.clients.openWindow((e.notification.data && e.notification.data.url) || "./");
+    })
+  );
 });

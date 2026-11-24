@@ -8,11 +8,12 @@
 //  - しくみ：前回送った内容（synced）と今の内容を比べて、変わったものだけ送る。
 //    相手の変更はリアルタイムで受け取り、この端末の保存に反映する。
 // =====================================================================
-import { SHARE_FIREBASE } from "./config.js";
+import { SHARE_FIREBASE, PUSH_URL } from "./config.js";
 
 const SDK = "https://www.gstatic.com/firebasejs/10.14.1";
 // 手元（localhost）で ?sharemock を付けたときだけ、偽物の保存先でテストする（share-mock.js は公開しない）
 const useMock = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).has("sharemock");
+export const pushReady = typeof PUSH_URL === "string" && /^https:\/\//.test(PUSH_URL);
 export const shareReady = useMock || !!(SHARE_FIREBASE && SHARE_FIREBASE.apiKey && !SHARE_FIREBASE.apiKey.startsWith("YOUR"));
 
 const enc8 = new TextEncoder(), dec8 = new TextDecoder();
@@ -139,6 +140,7 @@ export function createShare(h) {
                 }
                 const at = new Date().toISOString(); store("at", at);
                 setStatus({ state: "on", at, error: null });
+                await flushNotes();
             } catch (e) {
                 setStatus({ state: "error", error: String(e && e.message || e) });
             }
@@ -203,6 +205,7 @@ export function createShare(h) {
             const first = await fb.F.getDocs(itemsCol());
             await apply(first.docs);
             ready = true;
+            if (notifyOn()) subscribe().catch(() => {}); // 宛先が変わっていても届くように、つなぐたびに登録し直す
             await push();
             unsub = fb.F.onSnapshot(itemsCol(), (snap) => {
                 const docs = snap.docChanges().filter((c) => !c.doc.metadata.hasPendingWrites).map((c) => c.doc);
@@ -223,7 +226,65 @@ export function createShare(h) {
         store("pv", pv);
         await connect();
     }
+    // ---------- 通知（Cloudflare Worker 経由の Web Push） ----------
+    const pushRoom = async () => hex(await sha(`ajc-push:${code}`)).slice(0, 32);
+    function devId() {
+        let d = load("dev", null);
+        if (!d) { d = Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join(""); store("dev", d); }
+        return d;
+    }
+    const post = (path, body) => fetch(PUSH_URL.replace(/\/$/, "") + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+        .then((r) => r.json().then((j) => { if (!r.ok) throw new Error(j.error || r.status); return j; }));
+    const unb64u = (t) => Uint8Array.from(atob(t.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((t.length + 3) % 4)), (c) => c.charCodeAt(0));
+    const canPush = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+    const notifyOn = () => load("notify", false) && canPush() && Notification.permission === "granted";
+
+    async function subscribe() {
+        const reg = await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+            const { key } = await fetch(PUSH_URL.replace(/\/$/, "") + "/key").then((r) => r.json());
+            sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: unb64u(key) });
+        }
+        await post("/sub", { room: await pushRoom(), dev: devId(), name: load("name", ""), sub: sub.toJSON() });
+    }
+    async function enableNotify() {
+        if (!pushReady || !code) throw new Error("先に共有をはじめてください");
+        if (!canPush()) throw new Error("この画面では通知を使えません。iPhone は「ホーム画面に追加」したアプリから開いてください（iOS 16.4 以降）。");
+        const p = await Notification.requestPermission();
+        if (p !== "granted") throw new Error("通知が許可されませんでした。iPhone の「設定」→ 通知 → このアプリ で許可できます。");
+        await subscribe();
+        store("notify", true);
+    }
+    async function disableNotify() {
+        store("notify", false);
+        try {
+            const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+            if (sub) await sub.unsubscribe();
+            if (code) await post("/unsub", { room: await pushRoom(), dev: devId() });
+        } catch (e) { /* 失敗しても、こちらでは受け取らない */ }
+    }
+    // 相手に送る通知（共有が送れたあとで送る：相手が開いたとき、もう写真が届いているように）
+    function note(body) {
+        if (!pushReady || !code) return;
+        const list = load("notes", []);
+        list.push({ body, at: Date.now() });
+        store("notes", list.slice(-5));
+        dirty();
+    }
+    async function flushNotes() {
+        const list = load("notes", []);
+        if (!list.length || !pushReady) return;
+        store("notes", []);
+        const fresh = list.filter((n) => Date.now() - n.at < 6 * 3600 * 1000); // 古すぎるものは送らない
+        try {
+            const room = await pushRoom();
+            for (const n of fresh) await post("/notify", { room, dev: devId(), title: "ふたりの思い出", body: n.body });
+        } catch (e) { store("notes", [...fresh, ...load("notes", [])].slice(-5)); }
+    }
+
     function stop() {
+        if (load("notify", false)) disableNotify();
         if (unsub) unsub();
         unsub = null; ready = false; code = null;
         ["code", "synced", "at"].forEach((n) => localStorage.removeItem(K(n)));
@@ -244,6 +305,10 @@ export function createShare(h) {
     return {
         get code() { return code; },
         get status() { return status; },
-        connect, begin, stop, dirty, photo,
+        connect, begin, stop, dirty, photo, note, enableNotify, disableNotify,
+        get notifyOn() { return notifyOn(); },
+        get canPush() { return canPush(); },
+        get name() { return load("name", ""); },
+        set name(v) { store("name", String(v || "").trim().slice(0, 20)); if (notifyOn()) subscribe().catch(() => {}); },
     };
 }
