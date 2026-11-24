@@ -850,6 +850,7 @@
                 <div class="mem-grid" id="memGrid"></div>
                 <div class="mem-hint" id="memHint">日付をタップすると、写真とひとことを登録できます。</div>
                 <button type="button" class="mem-share" id="shareBtn" hidden onclick="shareOpen()">🔗 2人で共有<span id="shareState"></span></button>
+                <button type="button" class="mem-share" id="notifyPre" hidden onclick="notifyPreOpen()"></button>
             </div>
         </div>
 
@@ -2111,6 +2112,50 @@
                 </div>`;
         };
         window.shareClose = () => { shareSheet = false; extraClose(); };
+        // 共有・通知の準備が整う前に、通知の許可と名前だけ先に済ませておく
+        // （share.js と同じ保存先。共有がつながったとき、自動で通知の宛先を登録する）
+        const preK = (n) => `${STATE_KEY}:share-${n}`;
+        const preGet = (n, d) => { try { return JSON.parse(localStorage.getItem(preK(n))) ?? d; } catch (e) { return d; } };
+        const preSet = (n, v) => localStorage.setItem(preK(n), JSON.stringify(v));
+        const preCan = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+        const preOn = () => preGet('notify', false) && preCan() && Notification.permission === 'granted';
+        function notifyPrePaint() {
+            const b = $('notifyPre');
+            if (shareReady && pushReady) { b.hidden = true; return; }
+            b.hidden = false;
+            b.textContent = preOn() ? `🔔 通知オン（${preGet('name', '')}）` : '🔔 通知をオンにする';
+        }
+        window.notifyPreOpen = () => {
+            const on = preOn();
+            extraLayer().innerHTML = `<button class="book-close" onclick="extraClose()" aria-label="閉じる">×</button>
+                <div class="book-page" style="min-height:auto">
+                <div class="book-no">NOTICE // 通知</div>
+                <div class="book-h">通知</div>
+                <div class="book-q">相手が写真や思い出を追加したら、このスマホに通知が届くようにします。通知には「誰が・何を追加したか」だけが出ます。</div>
+                <div class="book-q" style="font-size:0.8rem">今は許可と名前を先に済ませておくだけです。「2人で共有」が使えるようになったら、自動で届きはじめます。</div>
+                <input id="preName" class="book-input share-input" style="text-transform:none" maxlength="20" placeholder="このスマホの人の名前（例：りお）" value="${escH(preGet('name', ''))}" onchange="preSetName(this.value)">
+                <div class="book-q" style="font-size:0.72rem">↑ 相手への通知に「〇〇が写真を追加しました」と出る名前です。</div>
+                ${on ? `<div class="share-state">🔔 通知オン</div>
+                    <button type="button" class="book-pdf" onclick="notifyPreSet(false)" style="opacity:0.7">通知をオフにする</button>`
+                : `<button type="button" class="book-pdf" onclick="notifyPreSet(true)">🔔 通知をオンにする</button>
+                    ${preCan() ? '' : '<div class="book-q" style="font-size:0.72rem">iPhone は、ホーム画面に追加したアプリから開くとオンにできます（iOS 16.4 以降）。</div>'}`}
+                </div>`;
+        };
+        window.preSetName = (v) => { preSet('name', String(v || '').trim().slice(0, 20)); notifyPrePaint(); };
+        window.notifyPreSet = async (on) => {
+            if (on) {
+                const v = $('preName').value.trim();
+                if (!v) { alert('先に、このスマホの人の名前を入れてください。'); $('preName').focus(); return; }
+                if (!preCan()) { alert('この画面では通知を使えません。iPhone は「ホーム画面に追加」したアプリから開いてください（iOS 16.4 以降）。'); return; }
+                preSet('name', v.slice(0, 20));
+                const p = await Notification.requestPermission();
+                if (p !== 'granted') { alert('通知が許可されませんでした。iPhone の「設定」→ 通知 → このアプリ で許可できます。'); return; }
+                preSet('notify', true);
+            } else preSet('notify', false);
+            notifyPrePaint();
+            notifyPreOpen();
+        };
+        notifyPrePaint();
         // 相手への通知：「〇〇が△△しました」
         function shareNote(what) {
             if (!share || !share.code) return;

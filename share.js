@@ -205,7 +205,7 @@ export function createShare(h) {
             const first = await fb.F.getDocs(itemsCol());
             await apply(first.docs);
             ready = true;
-            if (notifyOn()) subscribe().catch(() => {}); // 宛先が変わっていても届くように、つなぐたびに登録し直す
+            if (notifyOn() && pushReady) subscribe().catch(() => {}); // 宛先が変わっていても届くように、つなぐたびに登録し直す
             await push();
             unsub = fb.F.onSnapshot(itemsCol(), (snap) => {
                 const docs = snap.docChanges().filter((c) => !c.doc.metadata.hasPendingWrites).map((c) => c.doc);
