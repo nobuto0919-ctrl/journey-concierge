@@ -663,6 +663,11 @@
         .mem-photos img { width: 100%; aspect-ratio: 1; object-fit: cover; border: 4px solid #fff; box-shadow: 0 3px 8px rgba(60,40,10,0.25); }
         .mem-photos img:nth-child(odd) { transform: rotate(-1.5deg); }
         .mem-photos img:nth-child(even) { transform: rotate(1.5deg); }
+        .mem-share { display: block; margin: 12px auto 0; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--card-border); background: transparent; color: var(--text-sub); font-size: 0.75rem; cursor: pointer; }
+        .share-state { font-size: 0.9rem; color: #2b2620; margin-top: 6px; }
+        .share-err { font-size: 0.7rem; color: #b45309; margin-top: 4px; word-break: break-all; }
+        .share-code { font-family: ui-monospace, Menlo, monospace; font-size: 1.15rem; letter-spacing: 0.06em; color: #2b2620; background: #fff; border: 1px dashed #c9b48f; border-radius: 10px; padding: 12px; text-align: center; margin: 6px 0 10px; word-break: break-all; }
+        .share-input { min-height: auto; font-family: ui-monospace, Menlo, monospace; text-transform: uppercase; }
         .mem-hint { font-size: 0.75rem; color: var(--text-sub); text-align: center; margin-top: 12px; }
         .mem-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px dashed #d9caa9; }
         .mem-item img, .mem-noimg { width: 76px; height: 57px; object-fit: cover; border-radius: 4px; flex-shrink: 0; background: #f3ecdd; display: flex; align-items: center; justify-content: center; }
@@ -844,6 +849,7 @@
                 <div class="mem-week"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
                 <div class="mem-grid" id="memGrid"></div>
                 <div class="mem-hint" id="memHint">日付をタップすると、写真とひとことを登録できます。</div>
+                <button type="button" class="mem-share" id="shareBtn" hidden onclick="shareOpen()">🔗 2人で共有<span id="shareState"></span></button>
             </div>
         </div>
 
@@ -1015,6 +1021,7 @@
     <script type="module">
         import { sendAnswer, startAutoFlush, pendingCount, isDemo } from './sync.js';
         import { STEP_OPEN_AT, DESTINATION_REVEAL_AT } from './config.js';
+        import { createShare, shareReady, newCode, showCode } from './share.js';
 
         // ?now=2026-11-21T09:00 で時刻を上書きしてテストできる（日本時間として扱う）
         const nowOverride = new URLSearchParams(location.search).get('now');
@@ -1027,7 +1034,8 @@
         const TOTAL_STEPS = 13;
         // ?now= 付きで開くと「プレビューモード」：回答は送信せず、本番とは別の場所に保存する
         const isPreview = !!nowOverride;
-        const STATE_KEY = isPreview ? 'ajc-state-preview' : 'ajc-state';
+        const devTag = isPreview ? (new URLSearchParams(location.search).get('dev') || '').replace(/\W/g, '') : '';
+        const STATE_KEY = (isPreview ? 'ajc-state-preview' : 'ajc-state') + (devTag ? `-${devTag}` : '');
         const THEME_COLORS = { dark: '#0b0f19', light: '#f8fafc', silver: '#1e293b' };
 
         // ?reset=1 で端末内の進行状況をリセット（彼女に渡す前のテスト用）
@@ -1048,7 +1056,9 @@
             { theme: 'dark', briefingOpen: true, hintDismissed: false, done: {} },
             JSON.parse(localStorage.getItem(STATE_KEY) || '{}')
         );
-        const save = () => localStorage.setItem(STATE_KEY, JSON.stringify(state));
+        let share = null; // 2台共有（設定されていれば、保存のたびに相手へ送る）
+        const rawSave = () => localStorage.setItem(STATE_KEY, JSON.stringify(state));
+        const save = () => { rawSave(); if (share) share.dirty(); };
         const selections = {};
         const $ = (id) => document.getElementById(id);
 
@@ -1404,7 +1414,13 @@
         }
         const photoKey = (n) => `${STATE_KEY}:${n}`;
         const photoGet = (n) => photoTx('readonly', (st) => st.get(photoKey(n))).catch(() => null);
-        const photoPut = (n, blob) => photoTx('readwrite', (st) => st.put(blob, photoKey(n)));
+        const photoPutRaw = (n, blob) => photoTx('readwrite', (st) => st.put(blob, photoKey(n)));
+        const photoDelRaw = (n) => photoTx('readwrite', (st) => st.delete(photoKey(n))).catch(() => {});
+        const photoPut = async (n, blob) => { await photoPutRaw(n, blob); if (share) share.photo(String(n), true); };
+        const photoDel = async (n) => { await photoDelRaw(n); if (share) share.photo(String(n), false); };
+        const photoKeys = () => photoTx('readonly', (st) => st.getAllKeys())
+            .then((ks) => (ks || []).filter((k) => typeof k === 'string' && k.startsWith(`${STATE_KEY}:`)).map((k) => k.slice(STATE_KEY.length + 1)))
+            .catch(() => []);
         function photoClear() {
             photoTx('readwrite', (st) => {
                 for (let n = 1; n <= 20; n++) st.delete(`${STATE_KEY}:${n}`);
@@ -1795,7 +1811,7 @@
             if (!confirm('このページを本から消しますか？')) return;
             state.extras = (state.extras || []).filter((x) => x.id !== id);
             save();
-            photoTx('readwrite', (st) => st.delete(photoKey(`x${id}`))).catch(() => {});
+            photoDel(`x${id}`);
             await openBook(0, true);
             openBook(bookCache.length - 2);
         };
@@ -1921,7 +1937,7 @@
             const x = memList().find((v) => v.id === id);
             state.memories = memList().filter((v) => v.id !== id);
             save();
-            if (x) photoTx('readwrite', (st) => memKeys(x).forEach((k) => st.delete(photoKey(k)))).catch(() => {});
+            if (x) memKeys(x).forEach((k) => photoDel(k));
             memDay(memDate);
         };
         // 月の思い出本
@@ -2034,6 +2050,79 @@
             memYM = [d.getFullYear(), d.getMonth()];
             renderCal();
             memBook(k);
+        };
+        // ---------- 2台共有 ----------
+        let shareSheet = false;
+        function shareLabel(st) {
+            if (st.state === 'off') return '：まだ';
+            if (st.state === 'connecting') return '：つないでいます…';
+            if (st.state === 'error') return '：つながっていません（電波が戻ると自動で再開）';
+            const t = st.at ? new Date(st.at) : null;
+            return t ? `：共有中（${t.getHours()}:${pad2(t.getMinutes())} 更新）` : '：共有中';
+        }
+        if (shareReady) {
+            share = createShare({
+                prefix: STATE_KEY, state, rawSave, photoGet, photoPutRaw, photoDelRaw, photoKeys,
+                refresh: (kinds) => {
+                    bookCache = null;
+                    const bookOpen = $('book') && !$('book').hidden, layerOpen = $('extraLayer') && !$('extraLayer').hidden;
+                    if (kinds.has('answers') && !bookOpen && !layerOpen) { location.reload(); return; }
+                    renderCal();
+                    for (let n = 1; n <= TOTAL_STEPS; n++) showPhoto(n);
+                    if (bookOpen) openBook(bookAt, true);
+                },
+                onStatus: (st) => {
+                    $('shareState').textContent = shareLabel(st);
+                    if (shareSheet && $('extraLayer') && !$('extraLayer').hidden) shareOpen();
+                },
+            });
+            $('shareBtn').hidden = false;
+            $('shareState').textContent = shareLabel(share.status);
+            if (share.code) share.connect();
+        }
+        window.shareOpen = () => {
+            shareSheet = true;
+            const st = share.status, c = share.code;
+            extraLayer().innerHTML = `<button class="book-close" onclick="shareClose()" aria-label="閉じる">×</button>
+                <div class="book-page" style="min-height:auto">
+                <div class="book-no">SHARE // 2人のスマホで共有</div>
+                <div class="book-h">2人で共有</div>
+                ${c ? `
+                <div class="book-q">思い出カレンダーと旅の本（写真・ひとこと・回答）を、2台のスマホで一緒に使えます。どちらかが入れると、もう片方にも届きます。</div>
+                <div class="share-state">${shareLabel(st).slice(1)}</div>
+                ${st.error ? `<div class="share-err">${escH(st.error).slice(0, 200)}</div>` : ''}
+                <div class="book-no" style="margin-top:14px">共有コード</div>
+                <div class="share-code">${showCode(c)}</div>
+                <div class="book-q" style="font-size:0.8rem">もう1台のスマホで、このアプリの「🔗 2人で共有」→「コードを入れて参加」に入れてください。このコードを知っている人は中身を見られるので、2人の間だけで使ってね。</div>
+                <button type="button" class="book-pdf" onclick="shareCopy()">📋 コードをコピー</button>
+                <button type="button" class="book-pdf" onclick="shareStop()" style="opacity:0.7">このスマホの共有をやめる</button>`
+                : `
+                <div class="book-q">思い出カレンダーと旅の本（写真・ひとこと・回答）を、2台のスマホで一緒に使えます。中身はスマホの中で暗号化してから保存します。</div>
+                <div class="book-no" style="margin-top:14px">はじめる（1台目）</div>
+                <div class="book-q" style="font-size:0.8rem">思い出がたくさん入っているほうのスマホで押してください。</div>
+                <button type="button" class="book-pdf" id="shareGo" onclick="shareBegin()">🔗 共有をはじめる（コードを作る）</button>
+                <div class="book-no" style="margin-top:18px">参加する（2台目）</div>
+                <input id="shareInput" class="book-input share-input" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters">
+                <button type="button" class="book-pdf" id="shareJoin" onclick="shareBegin(true)">コードを入れて参加</button>`}
+                </div>`;
+        };
+        window.shareClose = () => { shareSheet = false; extraClose(); };
+        window.shareBegin = async (join) => {
+            const c = join ? $('shareInput').value : newCode();
+            if (join && !confirm('このコードの共有に参加しますか？\nこのスマホの思い出も、相手と共有されます。')) return;
+            const b = $(join ? 'shareJoin' : 'shareGo');
+            b.disabled = true; b.textContent = 'つないでいます…';
+            try { await share.begin(c); } catch (e) { alert(e.message || 'つなげませんでした'); }
+            shareOpen();
+        };
+        window.shareCopy = async () => {
+            try { await navigator.clipboard.writeText(showCode(share.code)); alert('コピーしました。LINE などで相手に送ってね。'); }
+            catch (e) { prompt('このコードをコピーしてください', showCode(share.code)); }
+        };
+        window.shareStop = () => {
+            if (!confirm('このスマホの共有をやめますか？\n（このスマホの思い出は残ります。相手のスマホにも残ります）')) return;
+            share.stop();
+            shareOpen();
         };
         setTab('mem');
         // 本の中から、写真のないページに写真を入れる（カードの写真と同じ場所に保存）

@@ -54,3 +54,17 @@ export const RELAY = {
   topic: "jc-bd9d5296e36eb1bf29231096271d3e8b",
   publicKey: "BP2UbjB78ZcPAhKnLrEvedcsPXciYr/oKz9dtd/L3VAlKowC5rK5/Nlo28aZsQXFA/hJIWprw05UeDfDBJMXg6Y=",
 };
+
+// =====================================================================
+//  2台共有（思い出カレンダー・旅の本）用の Firebase
+//  上の FIREBASE_CONFIG とは別物です（あちらを埋めると回答の送り方が変わるので触らない）。
+//  apiKey が "YOUR_..." のままだと共有ボタンは出ません。
+// =====================================================================
+export const SHARE_FIREBASE = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: "",
+};

@@ -2,13 +2,14 @@
 // - 自分のファイル：まずネットから最新を取り、ダメならキャッシュ（電波がなくても開ける）
 // - フォント・Firebase SDK：キャッシュ優先（バージョン固定なので変わらない）
 // ファイルを更新したら VERSION を上げると、古いキャッシュが消えます。
-const VERSION = "ajc-v45";
+const VERSION = "ajc-v46";
 const PRECACHE = [
   "./",
   "./index.html",
   "./host.html",
   "./config.js",
   "./sync.js",
+  "./share.js",
   "./manifest.webmanifest",
   "./manifest-host.webmanifest",
   "./icons/apple-touch-icon.png",
