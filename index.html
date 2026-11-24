@@ -648,6 +648,21 @@
         .mem-cell.photo span { position: absolute; top: 3px; left: 5px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); font-size: 0.72rem; font-weight: 600; }
         .mem-cell.has:not(.photo)::after { content: ''; position: absolute; bottom: 6px; left: 50%; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--accent-blue); }
         .mem-cell i { position: absolute; right: 3px; bottom: 2px; font-style: normal; font-size: 0.6rem; background: rgba(0,0,0,0.65); color: #fff; border-radius: 8px; padding: 0 4px; }
+        .mem-thumbs { display: flex; flex-wrap: wrap; gap: 4px; width: 100%; }
+        .mem-thumbs img { width: calc((100% - 12px) / 4); aspect-ratio: 1; object-fit: cover; border-radius: 4px; }
+        .mem-item { flex-direction: column; }
+        .mem-n { font-size: 0.72rem; color: #9a8b74; }
+        .mem-picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+        .mem-picks:empty { display: none; }
+        .mem-pick { position: relative; }
+        .mem-pick img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; display: block; }
+        .mem-pick button { position: absolute; top: 3px; right: 3px; width: 26px; height: 26px; border-radius: 50%; border: none; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.9rem; line-height: 1; cursor: pointer; }
+        #memPick.small { aspect-ratio: auto; padding: 14px 8px; font-size: 1.4rem; }
+        .mem-photos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin: 4px 0 16px; }
+        .mem-photos.c3 { grid-template-columns: repeat(3, 1fr); }
+        .mem-photos img { width: 100%; aspect-ratio: 1; object-fit: cover; border: 4px solid #fff; box-shadow: 0 3px 8px rgba(60,40,10,0.25); }
+        .mem-photos img:nth-child(odd) { transform: rotate(-1.5deg); }
+        .mem-photos img:nth-child(even) { transform: rotate(1.5deg); }
         .mem-hint { font-size: 0.75rem; color: var(--text-sub); text-align: center; margin-top: 12px; }
         .mem-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px dashed #d9caa9; }
         .mem-item img, .mem-noimg { width: 76px; height: 57px; object-fit: cover; border-radius: 4px; flex-shrink: 0; background: #f3ecdd; display: flex; align-items: center; justify-content: center; }
@@ -815,8 +830,8 @@
 
         <!-- タブ：旅 ／ 思い出カレンダー -->
         <div class="tabbar">
-            <button type="button" data-tab="trip" onclick="setTab('trip')">🧳 旅のしおり</button>
             <button type="button" data-tab="mem" onclick="setTab('mem')">📅 思い出カレンダー</button>
+            <button type="button" data-tab="trip" onclick="setTab('trip')">🧳 旅のしおり</button>
         </div>
         <div id="memView">
             <div class="mem-card">
@@ -1394,7 +1409,7 @@
             photoTx('readwrite', (st) => {
                 for (let n = 1; n <= 20; n++) st.delete(`${STATE_KEY}:${n}`);
                 (state.extras || []).forEach((x) => st.delete(`${STATE_KEY}:x${x.id}`));
-                (state.memories || []).forEach((x) => st.delete(`${STATE_KEY}:m${x.id}`));
+                (state.memories || []).forEach((x) => { for (let i = 0; i < (x.photos || 1); i++) st.delete(`${STATE_KEY}:m${x.id}${i ? `_${i}` : ''}`); });
             }).catch(() => {});
         }
         async function shrinkPhoto(file) {
@@ -1795,6 +1810,13 @@
         const dayKey = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
         const dayLabel = (key) => { const [y, m, d] = key.split('-').map(Number); return `${m}.${d} ${WEEK[new Date(y, m - 1, d).getDay()]}`; };
         let memYM = null;
+        const memKeys = (x) => Array.from({ length: x.photos || 1 }, (_, i) => `m${x.id}${i ? `_${i}` : ''}`);
+        async function memBlobs(x) {
+            const out = [];
+            for (const k of memKeys(x)) { const b = await photoGet(k); if (b) out.push(b); }
+            return out;
+        }
+        const memCount = (x) => Math.max(x.photos || 1, 1);
         const ymKey = () => `${memYM[0]}-${pad2(memYM[1] + 1)}`;
         const monthItems = () => memList().filter((x) => x.date.startsWith(ymKey())).sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
         window.setTab = (t) => {
@@ -1818,7 +1840,7 @@
             let h = '';
             for (let i = 0; i < first; i++) h += '<div class="mem-cell empty"></div>';
             for (let d = 1; d <= days; d++) {
-                const key = `${y}-${pad2(m + 1)}-${pad2(d)}`, n = list.filter((x) => x.date === key).length;
+                const key = `${y}-${pad2(m + 1)}-${pad2(d)}`, n = list.filter((x) => x.date === key).reduce((a, x) => a + memCount(x), 0);
                 h += `<button type="button" class="mem-cell${key === today ? ' today' : ''}${n ? ' has' : ''}" data-key="${key}" onclick="memDay('${key}')"><span>${d}</span>${n > 1 ? `<i>${n}</i>` : ''}</button>`;
             }
             $('memGrid').innerHTML = h;
@@ -1827,20 +1849,21 @@
             for (const x of items) {
                 const cell = $('memGrid').querySelector(`[data-key="${x.date}"]`);
                 if (!cell || cell.classList.contains('photo')) continue;
-                const b = await photoGet(`m${x.id}`);
+                const [b] = await memBlobs(x);
                 if (b) { cell.style.backgroundImage = `url(${URL.createObjectURL(b)})`; cell.classList.add('photo'); }
             }
         }
         let memDate = null;
         window.memDay = async (key) => {
             memDate = key;
-            extraBlob = null;
+            memNew = [];
             const list = memList().filter((x) => x.date === key).sort((a, b) => a.id - b.id);
             const rows = [];
             for (const x of list) {
-                const b = await photoGet(`m${x.id}`);
-                rows.push(`<div class="mem-item">${b ? `<img src="${URL.createObjectURL(b)}" alt="">` : '<div class="mem-noimg">📷</div>'}
-                    <div class="mem-item-text">${x.memo ? escH(x.memo) : '（ひとことなし）'}<button type="button" class="book-del" onclick="memDel(${x.id})">消す</button></div></div>`);
+                const bs = await memBlobs(x);
+                rows.push(`<div class="mem-item">
+                    ${bs.length ? `<div class="mem-thumbs">${bs.map((b) => `<img src="${URL.createObjectURL(b)}" alt="">`).join('')}</div>` : ''}
+                    <div class="mem-item-text">${x.memo ? escH(x.memo) : '（ひとことなし）'}${bs.length > 1 ? `<span class="mem-n">📷 ${bs.length}枚</span>` : ''}<button type="button" class="book-del" onclick="memDel(${x.id})">消す</button></div></div>`);
             }
             extraLayer().innerHTML = `<button class="book-close" onclick="memClose()" aria-label="閉じる">×</button>
                 <div class="book-page" style="min-height:auto">
@@ -1848,24 +1871,46 @@
                 <div class="book-h">この日の思い出</div>
                 ${rows.join('') || '<div class="book-q">まだ登録はありません。</div>'}
                 <div class="book-no" style="margin-top:16px">ADD // 写真とひとことを登録</div>
-                <label class="polaroid none add" id="extraPick" style="margin-top:10px">📷<span>📷 タップして写真を選ぶ</span><input type="file" accept="image/*" onchange="extraPhoto(this)"></label>
+                <div class="mem-picks" id="memPicks"></div>
+                <label class="polaroid none add" id="memPick" style="margin-top:10px">📷<span id="memPickText">📷 タップして写真を選ぶ（何枚でもOK）</span><input type="file" accept="image/*" multiple onchange="memPhoto(this)"></label>
                 <textarea id="extraMemo" class="book-input" placeholder="ひとこと（写真だけでもOK）"></textarea>
                 <button type="button" class="book-pdf" id="extraSave" onclick="memAdd()">＋ この日に登録する</button></div>`;
         };
+        let memNew = [];
+        function memPicksPaint() {
+            $('memPicks').innerHTML = memNew.map((b, i) => `<div class="mem-pick"><img src="${URL.createObjectURL(b)}" alt=""><button type="button" onclick="memUnpick(${i})" aria-label="外す">×</button></div>`).join('');
+            $('memPickText').textContent = memNew.length ? `＋ 写真をさらに追加（いま${memNew.length}枚）` : '📷 タップして写真を選ぶ（何枚でもOK）';
+            $('memPick').classList.toggle('small', memNew.length > 0);
+        }
+        window.memPhoto = async (input) => {
+            const fs = [...(input.files || [])];
+            input.value = '';
+            if (!fs.length) return;
+            $('memPickText').textContent = '読み込み中…';
+            for (const f of fs) {
+                try { memNew.push(await shrinkPhoto(f)); } catch (e) { /* 読めない写真は飛ばす */ }
+            }
+            memPicksPaint();
+        };
+        window.memUnpick = (i) => { memNew.splice(i, 1); memPicksPaint(); };
         window.memClose = () => { extraClose(); renderCal(); };
         window.memAdd = async () => {
             const memo = $('extraMemo').value.trim().slice(0, 400);
-            if (!memo && !extraBlob) { alert('写真かひとことを入れてください。'); return; }
+            if (!memo && !memNew.length) { alert('写真かひとことを入れてください。'); return; }
             $('extraSave').disabled = true;
-            const id = Date.now();
-            try { if (extraBlob) await photoPut(`m${id}`, extraBlob); } catch (e) { alert('写真を保存できませんでした。'); $('extraSave').disabled = false; return; }
-            state.memories = [...memList(), { id, date: memDate, memo, at: new Date().toISOString() }];
+            const id = Date.now(), x = { id, date: memDate, memo, photos: memNew.length, at: new Date().toISOString() };
+            try {
+                const ks = memKeys(x);
+                for (let i = 0; i < memNew.length; i++) await photoPut(ks[i], memNew[i]);
+            } catch (e) { alert('写真を保存できませんでした。'); $('extraSave').disabled = false; return; }
+            state.memories = [...memList(), x];
             save();
-            const u = extraBlob && URL.createObjectURL(extraBlob);
-            extraBlob = null;
+            const shown = memNew.slice(0, 6).map((b) => `<img src="${URL.createObjectURL(b)}" alt="">`).join('');
+            const n = memNew.length;
+            memNew = [];
             extraLayer().innerHTML = `<div class="book-page book-cover" style="min-height:auto">
-                <div class="book-no">${dayLabel(memDate)}</div>
-                ${u ? `<div class="polaroid"><img src="${u}" alt=""></div>` : ''}
+                <div class="book-no">${dayLabel(memDate)}${n > 1 ? ` // 写真${n}枚` : ''}</div>
+                ${n === 1 ? `<div class="polaroid">${shown}</div>` : n ? `<div class="book-collage">${shown}</div>` : ''}
                 <div class="book-h">登録しました！</div>
                 <div class="book-q">続けて追加しますか？</div>
                 <button type="button" class="book-pdf" onclick="memDay(memDate)">＋ この日にもう1つ追加する</button>
@@ -1873,16 +1918,20 @@
         };
         window.memDel = async (id) => {
             if (!confirm('この思い出を消しますか？')) return;
-            state.memories = memList().filter((x) => x.id !== id);
+            const x = memList().find((v) => v.id === id);
+            state.memories = memList().filter((v) => v.id !== id);
             save();
-            photoTx('readwrite', (st) => st.delete(photoKey(`m${id}`))).catch(() => {});
+            if (x) photoTx('readwrite', (st) => memKeys(x).forEach((k) => st.delete(photoKey(k)))).catch(() => {});
             memDay(memDate);
         };
         // 月の思い出本
         async function memPages() {
             const [y, m] = memYM, items = monthItems(), photos = {};
-            for (const x of items) { const b = await photoGet(`m${x.id}`); if (b) photos[x.id] = URL.createObjectURL(b); }
-            const collage = Object.values(photos).slice(0, 6).map((u) => `<img src="${u}" alt="">`).join('');
+            for (const x of items) photos[x.id] = (await memBlobs(x)).map((b) => URL.createObjectURL(b));
+            const collage = Object.values(photos).flat().slice(0, 6).map((u) => `<img src="${u}" alt="">`).join('');
+            const pics = (us) => !us.length ? '<div class="polaroid none">📷</div>'
+                : us.length === 1 ? `<div class="polaroid"><img src="${us[0]}" alt=""></div>`
+                : `<div class="mem-photos${us.length > 4 ? ' c3' : ''}">${us.map((u) => `<img src="${u}" alt="">`).join('')}</div>`;
             const pages = [`<div class="book-page book-cover">
                 <div class="book-no">${y}.${pad2(m + 1)}</div>
                 <div class="book-h">ふたりの思い出<br>${m + 1}月</div>
@@ -1894,7 +1943,7 @@
                 <div class="book-head"><div class="book-stamp">${Number(x.date.slice(8))}</div>
                     <div><div class="book-no">PAGE ${pad2(pages.length)} // ${y}.${pad2(m + 1)}</div>
                     <div class="book-time">${dayLabel(x.date)}</div></div></div>
-                ${photos[x.id] ? `<div class="polaroid"><img src="${photos[x.id]}" alt=""></div>` : '<div class="polaroid none">📷</div>'}
+                ${pics(photos[x.id])}
                 ${x.memo ? `<div class="book-word">「${escH(x.memo)}」</div>` : '<div class="book-word none">（ひとことなし）</div>'}
             </div>`));
             pages.push(`<div class="book-page book-cover">
@@ -1905,12 +1954,15 @@
         }
         async function memPdf() {
             const [y, m] = memYM, items = monthItems(), ims = {}, out = [];
-            for (const x of items) { const b = await photoGet(`m${x.id}`); if (b) { try { ims[x.id] = await loadImg(b); } catch (e) { /* 飛ばす */ } } }
+            for (const x of items) {
+                ims[x.id] = [];
+                for (const b of await memBlobs(x)) { try { ims[x.id].push(await loadImg(b)); } catch (e) { /* 飛ばす */ } }
+            }
             let [c, g] = pdfCanvas();
             g.textAlign = 'center';
             g.fillStyle = '#9a8b74'; g.font = `24px ${SERIF}`; g.fillText(`${y}.${pad2(m + 1)}`, PW / 2, 120);
             g.fillStyle = '#2b2620'; g.font = `52px ${SERIF}`; g.fillText('ふたりの思い出', PW / 2, 170); g.fillText(`${m + 1}月`, PW / 2, 240);
-            const list = Object.values(ims).slice(0, 6);
+            const list = Object.values(ims).flat().slice(0, 6);
             if (list.length) {
                 const cols = Math.min(3, list.length), cw = 220, ch = 165, gap = 18, x0 = (PW - (cols * cw + (cols - 1) * gap)) / 2;
                 list.forEach((im, i) => {
@@ -1934,7 +1986,15 @@
                 const pw = 660, ph = 495;
                 g.save(); g.translate(PW / 2, 200 + ph / 2 + 16); g.rotate(-2 * Math.PI / 180);
                 shadow(g, true); g.fillStyle = '#fff'; g.fillRect(-pw / 2 - 16, -ph / 2 - 16, pw + 32, ph + 64); shadow(g, false);
-                if (ims[x.id]) drawCover(g, ims[x.id], -pw / 2, -ph / 2, pw, ph);
+                const im = ims[x.id];
+                if (im.length === 1) drawCover(g, im[0], -pw / 2, -ph / 2, pw, ph);
+                else if (im.length) {
+                    g.fillStyle = '#f3ecdd'; g.fillRect(-pw / 2, -ph / 2, pw, ph);
+                    const sh = im.slice(0, 9), cols = sh.length <= 4 ? 2 : 3, rows = Math.ceil(sh.length / cols), gp = 8;
+                    const cw = (pw - gp * (cols - 1)) / cols, chh = (ph - gp * (rows - 1)) / rows;
+                    sh.forEach((m2, i) => drawCover(g, m2, -pw / 2 + (i % cols) * (cw + gp), -ph / 2 + Math.floor(i / cols) * (chh + gp), cw, chh));
+                    if (im.length > 9) { g.fillStyle = 'rgba(0,0,0,0.55)'; g.fillRect(pw / 2 - 120, ph / 2 - 50, 120, 50); g.fillStyle = '#fff'; g.font = `28px ${SERIF}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(`+${im.length - 9}枚`, pw / 2 - 60, ph / 2 - 25); }
+                }
                 else { g.fillStyle = '#f3ecdd'; g.fillRect(-pw / 2, -ph / 2, pw, ph); g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '150px sans-serif'; g.fillText('📷', 0, 0); }
                 g.restore();
                 g.textAlign = 'left'; g.textBaseline = 'top'; g.fillStyle = '#2b2620'; g.font = `32px ${SERIF}`;
@@ -1975,7 +2035,7 @@
             renderCal();
             memBook(k);
         };
-        setTab(localStorage.getItem('ajc-tab') || 'trip');
+        setTab('mem');
         // 本の中から、写真のないページに写真を入れる（カードの写真と同じ場所に保存）
         window.bookPhoto = async (n, input) => {
             await addPhoto(n, input);
