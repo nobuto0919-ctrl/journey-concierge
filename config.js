@@ -61,12 +61,12 @@ export const RELAY = {
 //  apiKey が "YOUR_..." のままだと共有ボタンは出ません。
 // =====================================================================
 export const SHARE_FIREBASE = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: "",
+  apiKey: "AIzaSyAUNNkCHdZANu00Ce1VHBh5lz5Dq1a1W3Y",
+  authDomain: "ajc-share.firebaseapp.com",
+  projectId: "ajc-share",
+  storageBucket: "ajc-share.firebasestorage.app",
+  messagingSenderId: "1065576844568",
+  appId: "1:1065576844568:web:a7d211747a2e74b272226d",
 };
 
 // 通知を送る係（Cloudflare Worker）の URL。例："https://ajc-push.xxxx.workers.dev"
