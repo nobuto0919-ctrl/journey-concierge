@@ -71,4 +71,4 @@ export const SHARE_FIREBASE = {
 
 // 通知を送る係（Cloudflare Worker）の URL。例："https://ajc-push.xxxx.workers.dev"
 // 空のままだと通知の設定は出ません。
-export const PUSH_URL = "";
+export const PUSH_URL = "https://ajc-push.nobuto0919.workers.dev";
